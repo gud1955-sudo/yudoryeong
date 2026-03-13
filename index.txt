@@ -1,0 +1,117 @@
+index
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>유도령의 인생상담소</title>
+    <script src="https://cdn.iamport.kr/v1/iamport.js"></script>
+    <style>
+        /* 중앙 정렬(justify-content: center)을 제거하고 왼쪽 정렬로 변경 */
+        body { font-family: sans-serif; background: #f7f8fa; display: flex; justify-content: flex-start; padding: 20px; margin: 0; }
+        
+        /* 왼쪽 여백을 주어 너무 벽에 붙지 않게 조절 (원하시면 0으로 바꾸셔도 됩니다) */
+        .container { background: white; padding: 30px; border-radius: 20px; width: 100%; max-width: 400px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin-left: 20px; }
+        
+        .form-group { margin-bottom: 20px; }
+        input, select { padding: 12px; border: 1px solid #ddd; border-radius: 10px; font-size: 16px; box-sizing: border-box; }
+        .birth-row { display: flex; gap: 8px; }
+        .birth-row input { width: 33%; text-align: center; }
+        .time-row { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+        .check-group { display: flex; align-items: center; gap: 4px; font-size: 14px; white-space: nowrap; cursor: pointer; }
+        .main-btn { width: 100%; padding: 18px; background: #ffcc00; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; }
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); }
+        .modal-content { background: white; margin: 20% auto; padding: 30px; border-radius: 20px; width: 80%; text-align: center; }
+        
+        .header-wrap { text-align: center; margin-bottom: 25px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header-wrap">
+        <h1 style="margin: 0; font-size: 24px;">🔮 유도령의 인생상담소</h1>
+    </div>
+    
+    <div class="form-group"><label>성함</label><input type="text" id="userName" style="width:100%;"></div>
+    <div class="form-group"><label>성별</label><select id="userGender" style="width:100%;"><option>남성</option><option>여성</option></select></div>
+    
+    <div class="form-group">
+        <label>생년월일</label>
+        <div class="birth-row">
+            <input type="text" id="year" placeholder="년(4자)" maxlength="4" oninput="this.value=this.value.replace(/[^0-9]/g,''); if(this.value.length==4)document.getElementById('month').focus();">
+            <input type="text" id="month" placeholder="월" maxlength="2" oninput="limitAndMove(this, 12, 'day')">
+            <input type="text" id="day" placeholder="일" maxlength="2" oninput="limitAndMove(this, 31, 'ampm')">
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label>태어난 시간</label>
+        <div class="time-row">
+            <label class="check-group"><input type="checkbox" id="noTime" onclick="toggleTime()"> 시간모름</label>
+            <select id="ampm"><option>오전</option><option>오후</option></select>
+            <input type="text" id="hour" style="width:50px;" placeholder="시" maxlength="2" oninput="limitAndMove(this, 12, 'min')">
+            <input type="text" id="min" style="width:50px;" placeholder="분" maxlength="2" oninput="limitAndMove(this, 59, '')">
+        </div>
+    </div>
+
+    <button class="main-btn" onclick="runAnalysis()">내 운세 확인하기</button>
+
+    <div id="result" style="display:none; margin-top:20px;">
+        <div id="freeText" style="background:#fff4e6; padding:15px; border-radius:10px; font-weight:bold; border-left:5px solid #ff922b;"></div>
+        <div id="paySection" style="text-align:center; margin-top:15px;">
+            <p>🔒 상세 분석이 준비되었습니다.</p>
+            <button onclick="startPayment()" style="width:100%; padding:12px; background:#333; color:white; border-radius:8px; cursor:pointer;">3,900원 결제하고 상세 보기</button>
+        </div>
+        <div id="fullText" style="display:none; white-space:pre-wrap; margin-top:15px; padding:15px; border:1px solid #ddd; border-radius:10px;"></div>
+    </div>
+</div>
+
+<div id="payModal" class="modal">
+    <div class="modal-content">
+        <h3>🧧 복채를 올리시겠습니까?</h3>
+        <p>💰 3,900원</p>
+        <div onclick="requestPay()" style="background:#fee500; padding:15px; border-radius:10px; font-weight:bold; cursor:pointer; margin-bottom:10px;">카카오페이 결제</div>
+        <button onclick="document.getElementById('payModal').style.display='none'" style="background:none; border:none; color:#999; cursor:pointer;">닫기</button>
+    </div>
+</div>
+
+<script>
+    window.onload = function() { window.IMP.init("imp50011546"); };
+
+    function limitAndMove(el, max, nextId) {
+        el.value = el.value.replace(/[^0-9]/g, '');
+        if (el.value.length >= 2) {
+            if (parseInt(el.value) > max) el.value = max;
+            if (nextId) document.getElementById(nextId).focus();
+        }
+    }
+    function toggleTime() {
+        const dis = document.getElementById('noTime').checked;
+        ['ampm', 'hour', 'min'].forEach(id => document.getElementById(id).disabled = dis);
+    }
+    function runAnalysis() {
+        const btn = document.querySelector('.main-btn'); btn.innerText = "읽는 중...";
+        fetch('/analyze', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                name: document.getElementById('userName').value, gender: document.getElementById('userGender').value,
+                birth: `${document.getElementById('year').value}-${document.getElementById('month').value}-${document.getElementById('day').value}`,
+                time: document.getElementById('noTime').checked ? "모름" : `${document.getElementById('ampm').value} ${document.getElementById('hour').value}시 ${document.getElementById('min').value}분`
+            })
+        }).then(res => res.json()).then(data => {
+            btn.innerText = "내 운세 확인하기"; document.getElementById('result').style.display = 'block';
+            document.getElementById('freeText').innerText = data.summary; window.fullData = data.full;
+        });
+    }
+    function startPayment() { document.getElementById('payModal').style.display = 'block'; }
+    function requestPay() {
+        window.IMP.request_pay({ pg: "kakaopay.TC0ONETIME", amount: 3900, name: "유도령 사주", merchant_uid: "yudoryung_" + new Date().getTime(), buyer_name: document.getElementById('userName').value }, 
+        function (rsp) { if (rsp.success) { alert("복채 확인 완료!"); completePayment(); } else { alert("실패: " + rsp.error_msg); } });
+    }
+    function completePayment() {
+        document.getElementById('payModal').style.display = 'none'; document.getElementById('paySection').style.display = 'none';
+        document.getElementById('fullText').style.display = 'block'; document.getElementById('fullText').innerText = window.fullData;
+    }
+</script>
+</body>
+</html>

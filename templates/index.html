@@ -1,0 +1,1581 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>유도령의 천기직언</title>
+    <script src="https://cdn.iamport.kr/v1/iamport.js">
+
+    // 카카오 SDK 초기화
+    function initKakao() {
+        if (window.Kakao && !window.Kakao.isInitialized()) {
+            window.Kakao.init('발급받은_JS_KEY_입력');
+        } else if (!window.Kakao) {
+            setTimeout(initKakao, 300);
+        }
+    }
+    document.addEventListener('DOMContentLoaded', initKakao);
+
+    function getShareDesc() {
+        const name = document.getElementById('userName')?.value?.trim() || '나';
+        const cat = selectedCategory ? (CAT_INFO[selectedCategory]?.name || '운세') : '운세';
+        return `${name}님의 사주팔자 ${cat} 결과를 확인해보세요`;
+    }
+
+    function shareKakao() {
+        if (!window.Kakao || !window.Kakao.isInitialized()) {
+            // SDK 미초기화 시 링크 복사로 폴백
+            copyLink();
+            return;
+        }
+        const name = document.getElementById('userName')?.value?.trim() || '나';
+        const cat = selectedCategory ? (CAT_INFO[selectedCategory]?.name || '운세') : '운세';
+        Kakao.Share.sendDefault({
+            objectType: 'feed',
+            content: {
+                title: `${name}님의 사주팔자 ${cat}`,
+                description: '유도령의 천기직언에서 나의 운명을 확인해보세요',
+                imageUrl: window.location.origin + '/static/yudo.png',
+                link: { mobileWebUrl: window.location.href, webUrl: window.location.href }
+            },
+            buttons: [{
+                title: '나도 보러가기',
+                link: { mobileWebUrl: window.location.href, webUrl: window.location.href }
+            }]
+        });
+    }
+
+    function copyLink() {
+        const url = window.location.href;
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(url).then(showToast);
+        } else {
+            const el = document.createElement('textarea');
+            el.value = url;
+            document.body.appendChild(el);
+            el.select();
+            document.execCommand('copy');
+            document.body.removeChild(el);
+            showToast();
+        }
+    }
+
+    function showToast(msg) {
+        const t = document.getElementById('shareToast');
+        t.textContent = msg || '링크가 복사되었습니다 ✦';
+        t.classList.add('show');
+        setTimeout(() => t.classList.remove('show'), 2500);
+    }
+
+
+    const YUDO_QUOTES = [
+        { q: "나쁜 사주란 없소.\n때를 모르고 사는 것이 문제일 뿐이오.", s: "✦ 유도령 어록 ✦" },
+        { q: "인연은 억지로 잡는 것이 아니오.\n때가 되면 스스로 찾아오는 법이니라.", s: "✦ 연애운 중에서 ✦" },
+        { q: "돈은 모으는 것이 아니라\n흘러오게 만드는 것이오.", s: "✦ 금전운 중에서 ✦" },
+        { q: "사주는 운명을 알려주는 것이 아니오.\n어떻게 살아야 할지를 알려주는 것이니라.", s: "✦ 유도령 어록 ✦" },
+        { q: "올해의 고난은\n내년의 꽃을 피우기 위한 거름이오.", s: "✦ 운세 풀이 중에서 ✦" },
+        { q: "병오년의 불길은\n막는 자를 태우고 올라타는 자를 빛나게 하오.", s: "✦ 2026 병오년 ✦" },
+        { q: "그대가 흔들리는 것은\n더 깊이 뿌리내리기 위함이니라.", s: "✦ 유도령 어록 ✦" },
+        { q: "재물은 용신(用神)을 따라 흐르오.\n그대의 용신을 알면 길이 보이리라.", s: "✦ 금전운 중에서 ✦" },
+        { q: "그대의 사주가 어떻든\n쓰임을 알면 귀한 그릇이 되는 법이오.", s: "✦ 유도령 어록 ✦" },
+        { q: "만남도 이별도\n모두 그대가 배워야 할 것을 가르쳐주러 온 것이오.", s: "✦ 연애운 중에서 ✦" },
+        { q: "서두르지 마시오.\n때가 맞지 않으면 아무리 좋은 씨앗도 썩을 뿐이오.", s: "✦ 유도령 어록 ✦" },
+        { q: "비교하지 마시오.\n그대의 사주는 오직 그대만의 것이오.", s: "✦ 유도령 어록 ✦" },
+    ];
+    let quoteIdx = Math.floor(Math.random() * YUDO_QUOTES.length);
+
+    function showQuote(idx, animate) {
+        const el = document.getElementById('yudoQuote');
+        const sub = document.getElementById('yudoQuoteSub');
+        if (!el) return;
+        if (animate) {
+            el.style.opacity = '0'; sub.style.opacity = '0';
+            setTimeout(() => {
+                el.innerText = YUDO_QUOTES[idx].q;
+                sub.innerText = YUDO_QUOTES[idx].s;
+                el.style.opacity = '1'; sub.style.opacity = '1';
+            }, 300);
+        } else {
+            el.innerText = YUDO_QUOTES[idx].q;
+            sub.innerText = YUDO_QUOTES[idx].s;
+        }
+    }
+
+    function nextQuote() {
+        quoteIdx = (quoteIdx + 1) % YUDO_QUOTES.length;
+        showQuote(quoteIdx, true);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => showQuote(quoteIdx, false));
+
+    function toggleFaq(el) {
+        const item = el.parentElement;
+        const isOpen = item.classList.contains('open');
+        document.querySelectorAll('.faq-item').forEach(i => {
+            i.classList.remove('open');
+            i.querySelector('.faq-a').style.maxHeight = '0';
+        });
+        if (!isOpen) {
+            item.classList.add('open');
+            item.querySelector('.faq-a').style.maxHeight = item.querySelector('.faq-a-inner').scrollHeight + 'px';
+        }
+    }
+</script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;700;900&family=Noto+Sans+KR:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        :root { --gold: #c9a84c; --gold-light: #e8c97a; --gold-dim: #7a6030; --deep: #0a0710; --deep2: #110d1a; --text: #e8dfc8; --text-dim: #8a7d6a; }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Noto Sans KR', sans-serif; background: var(--deep); color: var(--text); min-height: 100vh; overflow-x: hidden; }
+
+        .stars { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+        .star { position: absolute; background: white; border-radius: 50%; animation: twinkle var(--duration) infinite alternate; }
+        @keyframes twinkle { 0%{opacity:0.1;transform:scale(0.8)} 100%{opacity:0.9;transform:scale(1.2)} }
+        .aurora { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+        .aurora-band { position: absolute; width: 200%; height: 300px; left: -50%; border-radius: 50%; filter: blur(60px); animation: auroraDrift var(--dur) ease-in-out infinite alternate; }
+        .aurora-band:nth-child(1) { top:5%; background:linear-gradient(90deg,transparent,#00ffaa,#00ccff,transparent); --dur:9s; opacity:0.12; }
+        .aurora-band:nth-child(2) { top:12%; background:linear-gradient(90deg,transparent,#aa00ff,#0066ff,#00ffcc,transparent); --dur:13s; animation-delay:-4s; opacity:0.09; }
+        .aurora-band:nth-child(3) { top:20%; background:linear-gradient(90deg,transparent,#ff00aa,#6600ff,transparent); --dur:11s; animation-delay:-7s; opacity:0.07; }
+        @keyframes auroraDrift { 0%{transform:translateX(-10%) scaleY(1) rotate(-1deg);opacity:0.05} 50%{opacity:0.15} 100%{transform:translateX(10%) scaleY(1.3) rotate(1deg);opacity:0.08} }
+        .top-ornament { width:100%; height:4px; background:linear-gradient(90deg,transparent,var(--gold),var(--gold-light),var(--gold),transparent); position:relative; z-index:1; }
+
+
+        
+
+
+        /* 양력/음력 토글 */
+        .birth-label-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
+        .birth-label-row .form-label { margin-bottom:0; }
+        .cal-toggle { display:flex; background:rgba(255,255,255,0.04); border:1px solid rgba(201,168,76,0.18); border-radius:10px; overflow:hidden; }
+        .cal-btn { padding:6px 14px; border:none; background:none; color:var(--text-dim); font-family:'Noto Serif KR',serif; font-size:12px; letter-spacing:1px; cursor:pointer; transition:all 0.2s; }
+        .cal-btn.active { background:rgba(201,168,76,0.15); color:var(--gold-light); }
+
+        /* 히어로 */
+        .hero { position:relative; z-index:1; text-align:center; padding:40px 16px 0; }
+        .hero-subtitle { font-family:'Noto Serif KR',serif; font-size:12px; letter-spacing:5px; color:var(--gold); margin-bottom:12px; animation:fadeDown 1s ease both; }
+        .hero-title { font-family:'Noto Serif KR',serif; font-size:clamp(26px,7vw,48px); font-weight:900; color:var(--text); line-height:1.2; margin-bottom:8px; animation:fadeDown 1s 0.2s ease both; }
+        .hero-title span { background:linear-gradient(135deg,var(--gold-light),var(--gold),var(--gold-dim)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+        .hero-desc { font-size:13px; color:var(--text-dim); letter-spacing:2px; margin-bottom:32px; animation:fadeDown 1s 0.4s ease both; }
+        .master-img-wrap { position:relative; display:inline-block; animation:fadeDown 1s 0.3s ease both; }
+        .master-img-wrap::before { content:''; position:absolute; inset:-3px; border-radius:20px; background:linear-gradient(135deg,var(--gold),transparent,var(--gold-light),transparent,var(--gold)); z-index:-1; }
+        .master-img { width:min(88vw,480px); border-radius:18px; display:block; }
+        .master-img-glow { position:absolute; bottom:-20px; left:50%; transform:translateX(-50%); width:80%; height:40px; background:radial-gradient(ellipse,rgba(201,168,76,0.4),transparent); filter:blur(15px); }
+
+        /* 메인 카드 */
+        .main-wrap { position:relative; z-index:1; display:flex; justify-content:center; padding:50px 16px 60px; }
+        .card { background:linear-gradient(160deg,rgba(26,16,48,0.95),rgba(10,7,16,0.98)); border:1px solid rgba(201,168,76,0.25); border-radius:24px; padding:32px 24px; width:100%; max-width:460px; box-shadow:0 0 60px rgba(0,0,0,0.8),inset 0 1px 0 rgba(201,168,76,0.15); animation:fadeUp 1s 0.5s ease both; }
+        .card-ornament { text-align:center; margin-bottom:24px; }
+        .card-ornament-line { display:flex; align-items:center; gap:12px; margin-bottom:8px; }
+        .card-ornament-line::before { content:''; flex:1; height:1px; background:linear-gradient(90deg,transparent,var(--gold-dim)); }
+        .card-ornament-line::after { content:''; flex:1; height:1px; background:linear-gradient(90deg,var(--gold-dim),transparent); }
+        .card-ornament-symbol { color:var(--gold); font-size:20px; }
+        .card-title { font-family:'Noto Serif KR',serif; font-size:17px; color:var(--gold-light); letter-spacing:3px; }
+        .step-indicator { display:flex; justify-content:center; align-items:center; gap:8px; margin-bottom:24px; }
+        .step-dot { width:8px; height:8px; border-radius:50%; background:rgba(201,168,76,0.15); border:1px solid rgba(201,168,76,0.3); transition:all 0.3s; }
+        .step-dot.active { background:var(--gold); box-shadow:0 0 8px rgba(201,168,76,0.5); }
+        .step-line { width:30px; height:1px; background:rgba(201,168,76,0.15); }
+        .step-panel { display:none; }
+        .step-panel.active { display:block; animation:fadeUp 0.4s ease; }
+
+
+        /* 서비스 메뉴 */
+        .step-label { font-family:'Noto Serif KR',serif; font-size:14px; color:var(--gold-light); text-align:center; margin-bottom:20px; letter-spacing:2px; }
+        .service-menu { display:flex; flex-direction:column; gap:10px; margin-bottom:8px; }
+        .service-card { display:flex; align-items:center; gap:14px; padding:16px 18px; background:rgba(255,255,255,0.02); border:1px solid rgba(201,168,76,0.15); border-radius:16px; cursor:pointer; transition:all 0.3s; text-decoration:none; position:relative; overflow:hidden; }
+        .service-card::after { content:'→'; position:absolute; right:18px; color:rgba(201,168,76,0.3); font-size:16px; transition:all 0.3s; }
+        .service-card:hover { border-color:rgba(201,168,76,0.4); background:rgba(201,168,76,0.04); transform:translateX(3px); }
+        .service-card:hover::after { color:var(--gold); right:14px; }
+        .service-icon { font-size:28px; flex-shrink:0; width:44px; text-align:center; }
+        .service-info { flex:1; }
+        .service-name { font-family:'Noto Serif KR',serif; font-size:15px; color:var(--gold-light); letter-spacing:2px; margin-bottom:3px; display:flex; align-items:center; gap:8px; }
+        .service-desc { font-size:11px; color:var(--text-dim); letter-spacing:1px; }
+        .service-price { font-size:11px; color:rgba(201,168,76,0.5); margin-top:2px; }
+        .service-badge { font-size:9px; background:rgba(255,102,64,0.2); color:#ff9977; border:1px solid rgba(255,102,64,0.3); border-radius:8px; padding:1px 7px; letter-spacing:1px; }
+        .service-badge.new { background:rgba(100,200,100,0.15); color:#88dd88; border-color:rgba(100,200,100,0.3); }
+        .service-card.coming { opacity:0.45; cursor:not-allowed; }
+        .service-card.coming:hover { transform:none; border-color:rgba(201,168,76,0.15); background:rgba(255,255,255,0.02); }
+        .service-card.coming::after { display:none; }
+
+        /* 폼 */
+        .form-group { margin-bottom:18px; }
+        .form-label { display:block; font-size:11px; letter-spacing:3px; color:var(--gold); margin-bottom:8px; }
+        .form-input { width:100%; padding:15px 16px; background:rgba(255,255,255,0.04); border:1px solid rgba(201,168,76,0.2); border-radius:12px; color:var(--text); font-size:16px; font-family:'Noto Sans KR',sans-serif; transition:all 0.3s; outline:none; -webkit-appearance:none; }
+        .form-input:focus { border-color:var(--gold); box-shadow:0 0 0 3px rgba(201,168,76,0.1); }
+        .form-input option { background:var(--deep2); color:var(--text); }
+        .birth-row { display:flex; gap:8px; }
+        .birth-row .form-input { text-align:center; }
+        .time-row { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+        .time-small { width:70px !important; text-align:center; padding:15px 8px !important; }
+        .ampm-select { width:78px !important; padding:15px 6px !important; text-align:center; }
+        .input-unit-wrap { position:relative; display:flex; align-items:center; flex:1; }
+        .input-unit-wrap .form-input { padding-right:28px !important; }
+        .input-unit { position:absolute; right:10px; font-size:12px; color:rgba(201,168,76,0.5); font-family:'Noto Serif KR',serif; pointer-events:none; letter-spacing:0; }
+        .check-label { display:flex; align-items:center; gap:8px; font-size:13px; color:var(--text-dim); cursor:pointer; white-space:nowrap; padding:4px 0; }
+        .check-label input[type="checkbox"] { accent-color:var(--gold); width:18px; height:18px; }
+
+        /* 버튼 */
+        .main-btn { width:100%; padding:19px; background:linear-gradient(160deg,#1a1035,#0d0820); border:1px solid rgba(201,168,76,0.5); border-radius:14px; color:#e8c97a; font-family:'Noto Serif KR',serif; font-size:17px; font-weight:600; letter-spacing:3px; cursor:pointer; transition:all 0.3s; box-shadow:0 0 20px rgba(201,168,76,0.12); margin-top:8px; touch-action:manipulation; position:relative; overflow:hidden; }
+        .main-btn::after { content:''; position:absolute; top:-50%; left:-60%; width:40%; height:200%; background:linear-gradient(90deg,transparent,rgba(255,255,255,0.07),transparent); transform:skewX(-20deg); animation:shine 3s infinite; }
+        @keyframes shine { 0%,100%{left:-60%} 50%{left:120%} }
+        .main-btn:hover { border-color:var(--gold); box-shadow:0 0 32px rgba(201,168,76,0.25); transform:translateY(-1px); }
+        .main-btn:active { transform:scale(0.98); }
+        .main-btn:disabled { opacity:0.4; cursor:not-allowed; transform:none; }
+        .back-btn { background:none; border:none; color:var(--text-dim); font-family:'Noto Serif KR',serif; font-size:13px; letter-spacing:2px; cursor:pointer; padding:4px 0; margin-bottom:18px; display:flex; align-items:center; gap:4px; }
+        .back-btn:hover { color:var(--gold); }
+
+        /* 로딩 */
+        .loading-screen { display:none; position:fixed; inset:0; z-index:8000; background:#0a0710; flex-direction:column; align-items:center; justify-content:center; gap:0; }
+        .loading-screen.active { display:flex; }
+        .loading-crystal { font-size:60px; animation:crystalPulse 2s ease-in-out infinite; margin-bottom:28px; }
+        .loading-symbol { margin-bottom:24px; filter:drop-shadow(0 0 20px rgba(201,168,76,0.3)); }
+        @keyframes crystalPulse { 0%,100%{transform:scale(1) rotate(0deg);filter:drop-shadow(0 0 10px rgba(201,168,76,0.3))} 50%{transform:scale(1.12) rotate(4deg);filter:drop-shadow(0 0 28px rgba(201,168,76,0.7))} }
+        .loading-orb-wrap { position:relative; width:76px; height:76px; margin-bottom:28px; }
+        .loading-orb-outer { position:absolute; inset:0; border-radius:50%; border:2px solid transparent; border-top-color:var(--gold); border-right-color:var(--gold-light); animation:spin 1.2s linear infinite; }
+        .loading-orb-inner { position:absolute; inset:12px; border-radius:50%; border:1px solid transparent; border-bottom-color:var(--gold-dim); border-left-color:var(--gold); animation:spin 0.8s linear infinite reverse; }
+        .loading-orb-dot { position:absolute; inset:28px; border-radius:50%; background:radial-gradient(circle,var(--gold-light),var(--gold)); animation:crystalPulse 1.5s ease-in-out infinite; }
+        @keyframes spin { to{transform:rotate(360deg)} }
+        .loading-msg { font-family:'Noto Serif KR',serif; font-size:14px; color:rgba(201,168,76,0.7); letter-spacing:4px; text-align:center; min-height:26px; padding:0 32px; margin-top:28px; margin-bottom:16px; }
+        @keyframes msgFade { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+        .loading-dots { display:flex; gap:6px; margin-top:18px; }
+        .loading-dot { width:6px; height:6px; border-radius:50%; background:var(--gold-dim); animation:dotPulse 1.4s infinite; }
+        .loading-dot:nth-child(2) { animation-delay:0.2s; }
+        .loading-dot:nth-child(3) { animation-delay:0.4s; }
+        @keyframes dotPulse { 0%,80%,100%{background:var(--gold-dim);transform:scale(0.8)} 40%{background:var(--gold-light);transform:scale(1.3)} }
+
+        /* 결과 화면 */
+        .result-screen { display:none; position:fixed; inset:0; z-index:9000; background:#0a0710; overflow-y:auto; }
+        .result-screen.active { display:block; animation:resultOpen 0.4s ease; }
+        @keyframes resultOpen { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+        .result-inner { max-width:540px; margin:0 auto; padding:0 16px 120px; }
+        .result-header { position:sticky; top:0; z-index:10; background:rgba(10,7,16,0.96); backdrop-filter:blur(12px); padding:14px 0; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid rgba(201,168,76,0.12); margin-bottom:28px; }
+        .result-header-title { font-family:'Noto Serif KR',serif; font-size:15px; color:var(--gold-light); letter-spacing:3px; }
+        .result-back-btn { background:rgba(201,168,76,0.07); border:1px solid rgba(201,168,76,0.22); border-radius:8px; color:var(--gold); font-size:13px; padding:8px 14px; cursor:pointer; font-family:'Noto Serif KR',serif; }
+        .section-title { font-family:'Noto Serif KR',serif; font-size:12px; color:var(--gold); letter-spacing:3px; margin-bottom:14px; display:flex; align-items:center; gap:8px; }
+        .section-title::after { content:''; flex:1; height:1px; background:linear-gradient(90deg,var(--gold-dim),transparent); }
+
+        /* 오행 오각형 */
+        .oheng-section { margin-bottom:24px; animation:fadeUp 0.5s ease both; }
+        .oheng-pentagon-wrap { display:flex; justify-content:center; margin-bottom:16px; }
+        .oheng-pentagon-wrap svg { width:min(240px,70vw); height:min(240px,70vw); }
+        .oheng-strong-weak { display:flex; flex-direction:column; gap:8px; background:rgba(201,168,76,0.03); border:1px solid rgba(201,168,76,0.1); border-radius:12px; padding:14px 16px; }
+        .oheng-sw-row { font-family:'Noto Serif KR',serif; font-size:13px; color:var(--text-dim); line-height:1.7; }
+        .oheng-sw-row em { color:var(--gold-light); font-style:normal; }
+
+        /* 사주 표 */
+        .saju-section { margin-bottom:24px; animation:fadeUp 0.5s 0.1s ease both; }
+        .saju-table { width:100%; border:1px solid rgba(201,168,76,0.15); border-radius:12px; overflow:hidden; }
+        .saju-header { display:grid; grid-template-columns:repeat(4,1fr); background:rgba(201,168,76,0.05); border-bottom:1px solid rgba(201,168,76,0.1); }
+        .saju-header-cell { padding:10px 6px; text-align:center; font-family:'Noto Sans KR',sans-serif; font-size:10px; color:rgba(201,168,76,0.45); letter-spacing:1px; border-right:1px solid rgba(201,168,76,0.07); }
+        .saju-header-cell:last-child { border-right:none; }
+        .row-tag { grid-column:1/-1; padding:6px; text-align:center; font-family:'Noto Serif KR',serif; font-size:9px; color:rgba(201,168,76,0.3); letter-spacing:4px; border-bottom:1px solid rgba(201,168,76,0.06); display:block; }
+        .row-tag.sky { background:rgba(201,168,76,0.025); }
+        .row-tag.earth { background:rgba(60,60,140,0.04); }
+        .saju-row { display:grid; grid-template-columns:repeat(4,1fr); }
+        .saju-row.sky-bg { background:rgba(201,168,76,0.02); border-bottom:1px solid rgba(201,168,76,0.06); }
+        .saju-row.earth-bg { background:rgba(60,60,140,0.03); }
+        .saju-cell { padding:16px 6px; text-align:center; border-right:1px solid rgba(201,168,76,0.06); display:flex; flex-direction:column; align-items:center; gap:5px; }
+        .saju-cell:last-child { border-right:none; }
+        .saju-hanja { font-family:'Noto Serif KR',serif; font-size:26px; font-weight:700; line-height:1; }
+        .saju-hangul { font-family:'Noto Sans KR',sans-serif; font-size:10px; color:rgba(255,255,255,0.25); }
+        .saju-oheng-badge { font-size:9px; padding:2px 8px; border-radius:10px; font-family:'Noto Sans KR',sans-serif; border:1px solid; }
+        .mu   { color:#7acc50; background:rgba(60,120,20,0.2);  border-color:rgba(80,160,40,0.35); }
+        .hwa  { color:#ff6640; background:rgba(150,30,5,0.2);   border-color:rgba(200,60,20,0.35); }
+        .to   { color:#ddaa20; background:rgba(120,80,0,0.2);   border-color:rgba(180,140,0,0.35); }
+        .geum { color:#99aaee; background:rgba(40,40,120,0.2);  border-color:rgba(100,120,200,0.35); }
+        .su   { color:#44aaee; background:rgba(5,40,100,0.2);   border-color:rgba(20,100,180,0.35); }
+
+        /* 맛보기 */
+        .preview-section { margin-bottom:24px; animation:fadeUp 0.5s 0.15s ease both; }
+        .result-box { background:rgba(201,168,76,0.03); border:1px solid rgba(201,168,76,0.1); border-radius:12px; padding:18px 20px; white-space:pre-wrap; line-height:2; font-size:14px; color:var(--text); font-family:'Noto Serif KR',serif; }
+
+        /* 블러 유혹 - 타이틀이 오버레이에 절대 가리지 않는 구조 */
+        .tease-section { margin-bottom:0; animation:fadeUp 0.5s 0.2s ease both; }
+        .tease-title-row { display:flex; align-items:center; gap:8px; margin-bottom:14px; }
+        .tease-title-row::after { content:''; flex:1; height:1px; background:linear-gradient(90deg,var(--gold-dim),transparent); }
+        .tease-title-text { font-family:'Noto Serif KR',serif; font-size:12px; color:var(--gold); letter-spacing:3px; white-space:nowrap; }
+        .tease-inner { position:relative; border-radius:12px; overflow:hidden; min-height:240px; }
+        .tease-box { background:rgba(201,168,76,0.03); border:1px solid rgba(201,168,76,0.1); border-radius:12px; padding:18px 20px; font-size:14px; color:var(--text); font-family:'Noto Serif KR',serif; line-height:2; filter:blur(5px); user-select:none; pointer-events:none; min-height:240px; max-height:260px; overflow:hidden; }
+        .tease-overlay { position:absolute; inset:0; border-radius:12px; background:linear-gradient(to bottom,rgba(10,7,16,0) 0%,rgba(10,7,16,0.6) 35%,rgba(10,7,16,0.95) 65%,#0a0710 100%); display:flex; flex-direction:column; align-items:center; justify-content:flex-end; padding-bottom:20px; }
+        .tease-lock { font-size:30px; margin-bottom:8px; animation:lockPulse 2s ease-in-out infinite; }
+        @keyframes lockPulse { 0%,100%{filter:drop-shadow(0 0 4px rgba(201,168,76,0.2))} 50%{filter:drop-shadow(0 0 14px rgba(201,168,76,0.6))} }
+        .tease-text { font-family:'Noto Serif KR',serif; font-size:14px; color:var(--gold-light); letter-spacing:2px; margin-bottom:3px; }
+        .tease-subtext { font-size:11px; color:var(--text-dim); letter-spacing:1px; margin-bottom:4px; text-align:center; line-height:1.7; }
+        .tease-feature { font-size:11px; color:rgba(201,168,76,0.5); letter-spacing:1px; margin-bottom:14px; }
+        .unlock-btn { padding:15px 28px; background:linear-gradient(135deg,#8a6820,var(--gold),var(--gold-light),var(--gold),#8a6820); background-size:200% 100%; border:none; border-radius:12px; color:#1a0f00; font-family:'Noto Serif KR',serif; font-size:15px; font-weight:700; letter-spacing:2px; cursor:pointer; box-shadow:0 4px 20px rgba(201,168,76,0.35); position:relative; overflow:hidden; touch-action:manipulation; }
+        .unlock-btn::after { content:''; position:absolute; top:-50%; left:-60%; width:40%; height:200%; background:linear-gradient(90deg,transparent,rgba(255,255,255,0.15),transparent); transform:skewX(-20deg); animation:shine 2s infinite; }
+        .price-badge { font-size:10px; background:rgba(0,0,0,0.25); padding:1px 7px; border-radius:8px; margin-left:4px; }
+
+        /* ✅ 상세 분석 섹션 */
+        .detail-section { display:none; }
+        .detail-section.active { display:block; animation:fadeUp 0.5s ease; }
+
+        /* ✅ 채팅 UI */
+        .chat-section { display:none; margin-top:28px; }
+        .chat-section.active { display:block; animation:fadeUp 0.5s ease; }
+        .chat-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+        .chat-remaining { font-family:'Noto Serif KR',serif; font-size:12px; color:var(--gold-dim); letter-spacing:1px; }
+        .chat-remaining span { color:var(--gold-light); font-size:14px; }
+        .chat-messages { display:flex; flex-direction:column; gap:14px; margin-bottom:16px; }
+
+        /* 유도령 말풍선 */
+        .msg-yudo { display:flex; gap:10px; align-items:flex-start; }
+        .msg-yudo-avatar { width:36px; height:36px; border-radius:50%; background:linear-gradient(135deg,#2a1a50,#1a1030); border:1px solid rgba(201,168,76,0.3); display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0; }
+        .msg-yudo-bubble { background:linear-gradient(135deg,rgba(26,16,48,0.9),rgba(16,10,30,0.9)); border:1px solid rgba(201,168,76,0.2); border-radius:4px 16px 16px 16px; padding:14px 16px; max-width:85%; font-family:'Noto Serif KR',serif; font-size:14px; line-height:2; color:var(--text); white-space:pre-wrap; }
+
+        /* 손님 말풍선 */
+        .msg-user { display:flex; justify-content:flex-end; }
+        .msg-user-bubble { background:rgba(201,168,76,0.08); border:1px solid rgba(201,168,76,0.2); border-radius:16px 4px 16px 16px; padding:12px 16px; max-width:85%; font-family:'Noto Sans KR',sans-serif; font-size:14px; line-height:1.8; color:var(--text); }
+
+        /* 입력창 */
+        .chat-input-wrap { position:fixed; bottom:0; left:0; right:0; z-index:100; background:rgba(10,7,16,0.97); backdrop-filter:blur(12px); border-top:1px solid rgba(201,168,76,0.12); padding:12px 16px; display:none; }
+        .chat-input-wrap.active { display:block; }
+        .chat-input-inner { max-width:540px; margin:0 auto; display:flex; gap:10px; align-items:flex-end; }
+        .chat-textarea { flex:1; background:rgba(255,255,255,0.04); border:1px solid rgba(201,168,76,0.25); border-radius:12px; color:var(--text); font-size:15px; font-family:'Noto Sans KR',sans-serif; padding:12px 14px; outline:none; resize:none; max-height:100px; line-height:1.6; }
+        .chat-textarea:focus { border-color:rgba(201,168,76,0.5); }
+        .chat-textarea::placeholder { color:var(--text-dim); font-size:13px; }
+        .chat-send-btn { width:48px; height:48px; border-radius:12px; background:linear-gradient(135deg,#8a6820,var(--gold)); border:none; color:#1a0f00; font-size:20px; cursor:pointer; flex-shrink:0; display:flex; align-items:center; justify-content:center; touch-action:manipulation; }
+        .chat-send-btn:disabled { opacity:0.4; cursor:not-allowed; }
+
+        /* 타이핑 인디케이터 */
+        .typing-indicator { display:none; }
+        .typing-indicator.active { display:flex; gap:10px; align-items:flex-start; }
+        .typing-dots { background:linear-gradient(135deg,rgba(26,16,48,0.9),rgba(16,10,30,0.9)); border:1px solid rgba(201,168,76,0.2); border-radius:4px 16px 16px 16px; padding:14px 20px; display:flex; gap:6px; align-items:center; }
+        .typing-dot { width:7px; height:7px; border-radius:50%; background:var(--gold-dim); animation:typingPulse 1.2s infinite; }
+        .typing-dot:nth-child(2) { animation-delay:0.2s; }
+        .typing-dot:nth-child(3) { animation-delay:0.4s; }
+        @keyframes typingPulse { 0%,100%{transform:scale(0.8);background:var(--gold-dim)} 50%{transform:scale(1.2);background:var(--gold-light)} }
+
+        /* 완료 메시지 */
+        .chat-done { text-align:center; padding:20px; font-family:'Noto Serif KR',serif; font-size:13px; color:var(--gold-dim); letter-spacing:2px; border-top:1px solid rgba(201,168,76,0.08); margin-top:8px; }
+
+        /* 결제 모달 */
+        .modal { display:none; position:fixed; z-index:9999; inset:0; background:rgba(0,0,0,0.88); backdrop-filter:blur(8px); align-items:flex-end; justify-content:center; }
+        .modal.active { display:flex; }
+        .modal-box { background:linear-gradient(160deg,#1a1030,#0a0710); border:1px solid rgba(201,168,76,0.25); border-radius:24px 24px 0 0; padding:32px 24px 48px; width:100%; max-width:500px; text-align:center; box-shadow:0 -20px 60px rgba(0,0,0,0.8); animation:slideUp 0.3s ease; }
+        @keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
+        .modal-handle { width:40px; height:4px; background:rgba(201,168,76,0.25); border-radius:2px; margin:0 auto 20px; }
+        .modal-cat { font-family:'Noto Serif KR',serif; font-size:14px; color:var(--gold); letter-spacing:3px; margin-bottom:12px; }
+        .modal-symbol { font-size:40px; margin-bottom:10px; }
+        .modal-title { font-family:'Noto Serif KR',serif; font-size:19px; color:var(--gold-light); margin-bottom:8px; letter-spacing:2px; }
+        .modal-desc { font-size:13px; color:var(--text-dim); margin-bottom:16px; line-height:1.9; }
+        .modal-features { display:flex; justify-content:center; gap:20px; margin-bottom:20px; }
+        .modal-feature { display:flex; flex-direction:column; align-items:center; gap:4px; font-size:11px; color:var(--text-dim); }
+        .modal-feature-icon { font-size:22px; }
+        .kakao-btn { width:100%; padding:17px; background:#fee500; border:none; border-radius:13px; color:#1a1200; font-family:'Noto Serif KR',serif; font-size:16px; font-weight:700; cursor:pointer; margin-bottom:12px; letter-spacing:1px; touch-action:manipulation; }
+        .kakao-btn:active { transform:scale(0.98); }
+        .modal-close-btn { background:none; border:none; color:var(--text-dim); font-size:13px; cursor:pointer; padding:8px; }
+
+        .footer-ornament { text-align:center; padding:20px; font-size:11px; color:var(--text-dim); letter-spacing:3px; position:relative; z-index:1; }
+        @keyframes fadeDown { from{opacity:0;transform:translateY(-20px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+        ::-webkit-scrollbar { width:4px; }
+        ::-webkit-scrollbar-track { background:var(--deep); }
+        ::-webkit-scrollbar-thumb { background:var(--gold-dim); border-radius:2px; }
+
+
+        /* ═══ 랜딩 섹션 공통 ═══ */
+        .landing-section { display:block; position:relative; z-index:1; padding:80px 20px; max-width:600px; margin:0 auto; width:100%; box-sizing:border-box; }
+        .landing-divider { width:100%; height:1px; background:linear-gradient(90deg,transparent,rgba(201,168,76,0.15),transparent); margin:0; }
+        .landing-tag { font-family:'Noto Serif KR',serif; font-size:10px; letter-spacing:5px; color:var(--gold-dim); text-align:center; margin-bottom:12px; }
+        .landing-h2 { font-family:'Noto Serif KR',serif; font-size:clamp(20px,5vw,28px); color:var(--text); text-align:center; margin-bottom:8px; line-height:1.5; }
+        .landing-h2 em { background:linear-gradient(135deg,var(--gold-light),var(--gold)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; font-style:normal; }
+        .landing-sub { font-size:13px; color:var(--text-dim); text-align:center; line-height:1.9; margin-bottom:48px; letter-spacing:1px; }
+
+        /* 통계 */
+        .stats-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:0; }
+        .stat-card { background:linear-gradient(135deg,rgba(26,16,48,0.6),rgba(10,7,16,0.8)); border:1px solid rgba(201,168,76,0.12); border-radius:16px; padding:24px 12px; text-align:center; position:relative; overflow:hidden; }
+        .stat-card::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse at 50% 0%,rgba(201,168,76,0.06),transparent 70%); }
+        .stat-num { font-family:'Noto Serif KR',serif; font-size:clamp(22px,6vw,32px); font-weight:900; background:linear-gradient(135deg,var(--gold-light),var(--gold)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; line-height:1; margin-bottom:6px; }
+        .stat-label { font-size:10px; color:var(--text-dim); letter-spacing:2px; line-height:1.5; }
+
+        /* 특징 */
+        .features-list { display:flex; flex-direction:column; gap:16px; }
+        .feature-item { display:flex; gap:16px; align-items:flex-start; background:rgba(255,255,255,0.02); border:1px solid rgba(201,168,76,0.1); border-radius:16px; padding:20px; transition:all 0.3s; }
+        .feature-item:hover { border-color:rgba(201,168,76,0.25); background:rgba(201,168,76,0.03); }
+        .feature-icon-wrap { width:48px; height:48px; border-radius:12px; background:linear-gradient(135deg,rgba(201,168,76,0.1),rgba(201,168,76,0.05)); border:1px solid rgba(201,168,76,0.2); display:flex; align-items:center; justify-content:center; font-size:22px; flex-shrink:0; }
+        .feature-text h4 em { color:var(--gold-light); font-style:normal; }
+        .feature-text h4 { font-family:'Noto Serif KR',serif; font-size:14px; color:var(--gold-light); margin-bottom:6px; letter-spacing:1px; }
+        .feature-text p { font-size:12px; color:var(--text-dim); line-height:1.8; }
+
+        /* 후기 */
+        .reviews-wrap { position:relative; overflow:hidden; }
+        .reviews-track { display:flex; gap:14px; animation:reviewScroll 28s linear infinite; width:max-content; }
+        .reviews-track:hover { animation-play-state:paused; }
+        @keyframes reviewScroll { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
+        .reviews-fade-left { position:absolute; left:0; top:0; bottom:0; width:60px; background:linear-gradient(90deg,var(--deep),transparent); z-index:2; pointer-events:none; }
+        .reviews-fade-right { position:absolute; right:0; top:0; bottom:0; width:60px; background:linear-gradient(270deg,var(--deep),transparent); z-index:2; pointer-events:none; }
+        .review-card { background:linear-gradient(135deg,rgba(26,16,48,0.7),rgba(10,7,16,0.9)); border:1px solid rgba(201,168,76,0.12); border-radius:16px; padding:20px 22px; width:240px; flex-shrink:0; }
+        .review-stars { color:var(--gold); font-size:11px; margin-bottom:8px; letter-spacing:2px; }
+        .review-text { font-family:'Noto Serif KR',serif; font-size:12px; color:var(--text); line-height:1.9; margin-bottom:12px; }
+        .review-author { display:flex; align-items:center; gap:8px; }
+        .review-avatar { width:28px; height:28px; border-radius:50%; background:linear-gradient(135deg,var(--gold-dim),rgba(201,168,76,0.3)); display:flex; align-items:center; justify-content:center; font-size:12px; border:1px solid rgba(201,168,76,0.2); }
+        .review-name { font-size:11px; color:var(--text-dim); letter-spacing:1px; }
+        .review-cat { font-size:10px; color:rgba(201,168,76,0.4); margin-top:1px; }
+
+        /* 작동방식 */
+        .how-steps { display:flex; flex-direction:column; gap:0; position:relative; }
+        .how-steps::before { content:''; position:absolute; left:23px; top:24px; bottom:24px; width:1px; background:linear-gradient(180deg,rgba(201,168,76,0.3),rgba(201,168,76,0.05)); }
+        .how-step { display:flex; gap:16px; align-items:flex-start; padding:16px 0; }
+        .how-num { width:48px; height:48px; border-radius:50%; background:linear-gradient(135deg,rgba(26,16,48,0.9),rgba(10,7,16,0.95)); border:1px solid rgba(201,168,76,0.35); display:flex; align-items:center; justify-content:center; font-family:'Noto Serif KR',serif; font-size:16px; color:var(--gold); flex-shrink:0; position:relative; z-index:1; }
+        .how-content h4 { font-family:'Noto Serif KR',serif; font-size:14px; color:var(--gold-light); margin-bottom:4px; padding-top:12px; }
+        .how-content p { font-size:12px; color:var(--text-dim); line-height:1.8; }
+
+        /* FAQ */
+        .faq-list { display:flex; flex-direction:column; gap:10px; }
+        .faq-item { background:rgba(255,255,255,0.02); border:1px solid rgba(201,168,76,0.1); border-radius:14px; overflow:hidden; transition:all 0.3s; }
+        .faq-item.open { border-color:rgba(201,168,76,0.25); }
+        .faq-q { padding:18px 20px; font-family:'Noto Serif KR',serif; font-size:13px; color:var(--text); cursor:pointer; display:flex; justify-content:space-between; align-items:center; gap:12px; letter-spacing:1px; }
+        .faq-q::after { content:'＋'; color:var(--gold-dim); font-size:16px; flex-shrink:0; transition:transform 0.3s; }
+        .faq-item.open .faq-q::after { transform:rotate(45deg); }
+        .faq-a { max-height:0; overflow:hidden; transition:max-height 0.4s ease; }
+        .faq-a-inner { padding:0 20px 18px; font-size:13px; color:var(--text-dim); line-height:1.9; border-top:1px solid rgba(201,168,76,0.07); padding-top:14px; }
+
+        /* CTA */
+        .cta-section { text-align:center; padding:60px 20px 80px; position:relative; z-index:1; }
+        .cta-glow { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:300px; height:300px; background:radial-gradient(ellipse,rgba(201,168,76,0.06),transparent 70%); pointer-events:none; }
+        .cta-title { font-family:'Noto Serif KR',serif; font-size:clamp(18px,5vw,26px); color:var(--text); margin-bottom:12px; line-height:1.6; }
+        .cta-title em { color:var(--gold-light); font-style:normal; }
+        .cta-sub { font-size:13px; color:var(--text-dim); margin-bottom:32px; letter-spacing:1px; line-height:1.8; }
+        .cta-btn { display:inline-block; padding:18px 48px; background:linear-gradient(160deg,#1a1035,#0d0820); border:1px solid rgba(201,168,76,0.5); border-radius:14px; color:var(--gold-light); font-family:'Noto Serif KR',serif; font-size:17px; font-weight:600; letter-spacing:3px; cursor:pointer; box-shadow:0 0 30px rgba(201,168,76,0.15); transition:all 0.3s; position:relative; overflow:hidden; }
+        .cta-btn::after { content:''; position:absolute; top:-50%; left:-60%; width:40%; height:200%; background:linear-gradient(90deg,transparent,rgba(255,255,255,0.07),transparent); transform:skewX(-20deg); animation:shine 3s infinite; }
+        .cta-btn:hover { border-color:var(--gold); box-shadow:0 0 50px rgba(201,168,76,0.25); transform:translateY(-2px); }
+
+
+        /* 유도령의 한 마디 */
+        .yudo-quote-section { text-align:center; }
+        .yudo-quote-wrap { background:linear-gradient(135deg,rgba(26,16,48,0.6),rgba(10,7,16,0.8)); border:1px solid rgba(201,168,76,0.15); border-radius:20px; padding:36px 28px 28px; }
+        .yudo-quote-symbol { width:44px; height:44px; background:linear-gradient(135deg,#1a0a30,#0a0710); border:1px solid rgba(201,168,76,0.3); border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:'Noto Serif KR',serif; font-size:18px; color:var(--gold); margin:0 auto 20px; }
+        .yudo-quote { font-family:'Noto Serif KR',serif; font-size:clamp(15px,4vw,18px); color:var(--text); line-height:2.2; letter-spacing:1px; margin-bottom:16px; word-break:keep-all; font-style:normal; min-height:80px; transition:opacity 0.4s; }
+        .yudo-quote-sub { font-size:12px; color:var(--gold-dim); letter-spacing:3px; margin-bottom:20px; font-family:'Noto Serif KR',serif; transition:opacity 0.4s; }
+
+        /* 병오년 섹션 */
+        .byongo-card { background:linear-gradient(135deg,rgba(255,102,64,0.06),rgba(255,170,0,0.04)); border:1px solid rgba(255,102,64,0.18); border-radius:16px; padding:24px; text-align:center; margin-bottom:24px; }
+        .byongo-hanja { font-family:'Noto Serif KR',serif; font-size:48px; font-weight:900; background:linear-gradient(135deg,#ffcc00,#ff6640); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; letter-spacing:8px; margin-bottom:14px; filter:drop-shadow(0 0 12px rgba(255,102,64,0.2)); }
+        .byongo-intro { font-family:'Noto Serif KR',serif; font-size:14px; color:var(--text-dim); line-height:2.2; word-break:keep-all; text-align:left; }
+        .byongo-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:24px; }
+        .byongo-item { border-radius:14px; padding:18px 14px; text-align:center; }
+        .byongo-item.good { background:rgba(255,170,0,0.05); border:1px solid rgba(255,170,0,0.15); }
+        .byongo-item.caution { background:rgba(100,100,200,0.05); border:1px solid rgba(100,100,200,0.15); }
+        .byongo-item-icon { font-size:26px; margin-bottom:8px; }
+        .byongo-item h4 { font-family:'Noto Serif KR',serif; font-size:13px; color:var(--gold-light); letter-spacing:1px; margin-bottom:8px; }
+        .byongo-item p { font-size:11px; color:var(--text-dim); line-height:1.9; word-break:keep-all; }
+        .byongo-cta { text-align:center; background:linear-gradient(135deg,rgba(255,102,64,0.08),rgba(10,7,16,0)); border:1px solid rgba(255,102,64,0.2); border-radius:16px; padding:24px; }
+        .byongo-cta-text { font-family:'Noto Serif KR',serif; font-size:14px; color:var(--text-dim); line-height:2; margin-bottom:16px; }
+        .byongo-btn { display:inline-block; padding:14px 28px; background:linear-gradient(135deg,#7a2010,#ff6640); border-radius:12px; color:#fff; font-family:'Noto Serif KR',serif; font-size:14px; letter-spacing:2px; text-decoration:none; transition:all 0.3s; box-shadow:0 4px 16px rgba(255,102,64,0.25); }
+        .byongo-btn:hover { transform:translateY(-2px); box-shadow:0 8px 24px rgba(255,102,64,0.35); }
+
+        /* 서비스 소개 그리드 */
+        .service-intro-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+        .service-intro-card { background:linear-gradient(135deg,rgba(26,16,48,0.6),rgba(10,7,16,0.8)); border:1px solid rgba(201,168,76,0.12); border-radius:16px; padding:20px 16px; text-align:center; cursor:pointer; transition:all 0.3s; }
+        .service-intro-card:hover { border-color:rgba(201,168,76,0.35); transform:translateY(-2px); box-shadow:0 8px 24px rgba(0,0,0,0.4); }
+        .service-intro-card.coming { opacity:0.4; cursor:not-allowed; }
+        .service-intro-card.coming:hover { transform:none; border-color:rgba(201,168,76,0.12); }
+        .si-icon { font-size:32px; margin-bottom:8px; }
+        .si-name { font-family:'Noto Serif KR',serif; font-size:14px; color:var(--gold-light); letter-spacing:2px; margin-bottom:6px; }
+        .si-desc { font-size:11px; color:var(--text-dim); line-height:1.8; margin-bottom:8px; }
+        .si-price { font-size:12px; color:rgba(201,168,76,0.6); font-family:'Noto Serif KR',serif; }
+        .si-price.soon { color:var(--text-dim); }
+
+        /* 공유하기 */
+        .share-section { margin:28px 0 0; padding:20px; background:rgba(201,168,76,0.03); border:1px solid rgba(201,168,76,0.1); border-radius:16px; }
+        .share-title { font-family:'Noto Serif KR',serif; font-size:12px; color:var(--gold-dim); letter-spacing:3px; text-align:center; margin-bottom:14px; }
+        .share-btns { display:flex; gap:10px; }
+        .share-btn-kakao { flex:1; display:flex; align-items:center; justify-content:center; gap:8px; padding:13px; background:#fee500; border:none; border-radius:12px; color:#1a1200; font-family:'Noto Sans KR',sans-serif; font-size:14px; font-weight:700; cursor:pointer; transition:all 0.2s; }
+        .share-btn-kakao:hover { background:#fdd800; transform:translateY(-1px); }
+        .share-btn-kakao:active { transform:scale(0.97); }
+        .share-btn-link { flex:1; display:flex; align-items:center; justify-content:center; gap:8px; padding:13px; background:rgba(255,255,255,0.04); border:1px solid rgba(201,168,76,0.25); border-radius:12px; color:var(--gold-light); font-family:'Noto Sans KR',sans-serif; font-size:14px; cursor:pointer; transition:all 0.2s; }
+        .share-btn-link:hover { border-color:var(--gold); background:rgba(201,168,76,0.06); transform:translateY(-1px); }
+        .share-btn-link:active { transform:scale(0.97); }
+        .share-toast { position:fixed; bottom:100px; left:50%; transform:translateX(-50%) translateY(20px); background:rgba(26,16,48,0.95); border:1px solid rgba(201,168,76,0.3); border-radius:10px; padding:10px 20px; font-size:13px; color:var(--gold-light); font-family:'Noto Serif KR',serif; letter-spacing:1px; opacity:0; transition:all 0.3s; z-index:99999; white-space:nowrap; pointer-events:none; }
+        .share-toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+
+        @media (min-width:600px) {
+            .hero { padding:60px 20px 0; }
+            .main-wrap { padding:60px 20px 80px; }
+            .card { padding:40px 36px; }
+            .modal { align-items:center; }
+            .modal-box { border-radius:20px; max-width:400px; animation:modalPop 0.3s ease; }
+            @keyframes modalPop { from{transform:scale(0.92);opacity:0} to{transform:scale(1);opacity:1} }
+            .result-inner { padding:0 24px 120px; }
+            .chat-input-inner { padding:0; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="stars" id="stars"></div>
+<div class="aurora">
+    <div class="aurora-band"></div>
+    <div class="aurora-band"></div>
+    <div class="aurora-band"></div>
+</div>
+<div class="top-ornament"></div>
+
+<div class="hero">
+    <p class="hero-subtitle">✦ 천년의 지혜 · 운명의 계시 ✦</p>
+    <h1 class="hero-title"><span>유도령</span>의 천기직언</h1>
+    <p class="hero-desc">태어난 순간 새겨진 운명의 지도</p>
+    <div class="master-img-wrap">
+        <img src="/static/yudo.png" alt="유도령" class="master-img">
+        <div class="master-img-glow"></div>
+    </div>
+</div>
+
+<div class="main-wrap">
+    <div class="card">
+        <div class="card-ornament">
+            <div class="card-ornament-line"><span class="card-ornament-symbol">☯</span></div>
+            <p class="card-title" id="cardTitle">어떤 운세를 보시겠소?</p>
+        </div>
+        <div class="step-indicator">
+            <div class="step-dot active" id="dot1"></div>
+            <div class="step-line"></div>
+            <div class="step-dot" id="dot2"></div>
+        </div>
+
+        <div class="step-panel active" id="step1">
+            <p class="step-label">✦ 어떤 운세를 보시겠소 ✦</p>
+            <div class="service-menu">
+                <a href="/sinnyeon" class="service-card">
+                    <div class="service-icon">🔥</div>
+                    <div class="service-info">
+                        <div class="service-name">2026 신년운세 <span class="service-badge">HOT</span></div>
+                        <div class="service-desc">병오년 월별 흐름 · 연애·직업·재물·건강</div>
+                        
+                    </div>
+                </a>
+                <a href="/saju" class="service-card">
+                    <div class="service-icon">🔮</div>
+                    <div class="service-info">
+                        <div class="service-name">정통 사주분석</div>
+                        <div class="service-desc">연애·직업·금전·올해운 종합 심층분석</div>
+                        
+                    </div>
+                </a>
+                <a href="/gunghap" class="service-card">
+                    <div class="service-icon">💕</div>
+                    <div class="service-info">
+                        <div class="service-name">짝궁합 <span class="service-badge new">NEW</span></div>
+                        <div class="service-desc">두 사람의 사주로 보는 인연의 깊이</div>
+                        
+                    </div>
+                </a>
+                <div class="service-card coming">
+                    <div class="service-icon">📱</div>
+                    <div class="service-info">
+                        <div class="service-name">일간운세 카톡 <span class="service-badge">준비중</span></div>
+                        <div class="service-desc">매일 아침 카카오톡으로 오늘의 운세</div>
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="step-panel" id="step2">
+            <!-- 브라우저 자동완성 흡수용 더미 (화면에 안보임) -->
+            <input type="text" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;" tabindex="-1" aria-hidden="true">
+            <input type="password" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;" tabindex="-1" aria-hidden="true">
+            <button class="back-btn" onclick="goStep1()">← 서비스 선택으로</button>
+            <div class="form-group">
+                <label class="form-label">✦ 성함</label>
+                <input type="text" id="userName" name="saju_nm_k1z9" class="form-input" placeholder="성함을 입력하시오" autocomplete="new-password">
+            </div>
+            <div class="form-group">
+                <label class="form-label">✦ 성별</label>
+                <select id="userGender" class="form-input"><option>남성</option><option>여성</option></select>
+            </div>
+            <div class="form-group">
+                <div class="birth-label-row">
+                    <label class="form-label">✦ 생년월일</label>
+                    <div class="cal-toggle">
+                        <button class="cal-btn active" id="calBtn_SOL" onclick="setCal('SOL','')">양력</button>
+                        <button class="cal-btn" id="calBtn_LUN" onclick="setCal('LUN','')">음력</button>
+                    </div>
+                </div>
+                <div class="birth-row"><div class="birth-row">
+                    <div class="input-unit-wrap">
+                        <input type="text" id="year" class="form-input" placeholder="년" inputmode="numeric" autocomplete="off"
+                            oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,4);if(this.value.length==4){if(parseInt(this.value)<1900)this.value='1900';if(parseInt(this.value)>2026)this.value='2026';document.getElementById('month').focus();}">
+                        <span class="input-unit">년</span>
+                    </div>
+                    <div class="input-unit-wrap" style="max-width:80px;">
+                        <input type="text" id="month" class="form-input" placeholder="월" inputmode="numeric" autocomplete="off" oninput="limitAndMove(this,12,'day')">
+                        <span class="input-unit">월</span>
+                    </div>
+                    <div class="input-unit-wrap" style="max-width:80px;">
+                        <input type="text" id="day" class="form-input" placeholder="일" inputmode="numeric" autocomplete="off" oninput="limitAndMove(this,31,'ampm')">
+                        <span class="input-unit">일</span>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">✦ 태어난 시간</label>
+                <label class="check-label" style="margin-bottom:8px;display:flex;"><input type="checkbox" id="noTime" onclick="toggleTime()"> 시간모름</label>
+                <div class="birth-row">
+                    <div class="input-unit-wrap" style="max-width:100px;">
+                        <select id="ampm" class="form-input" style="text-align:center;padding-right:28px;"><option>오전</option><option>오후</option></select>
+                        <span class="input-unit">　</span>
+                    </div>
+                    <div class="input-unit-wrap" style="max-width:90px;">
+                        <input type="text" id="hour" class="form-input" placeholder="시" inputmode="numeric" autocomplete="off" oninput="limitAndMove(this,12,'min')">
+                        <span class="input-unit">시</span>
+                    </div>
+                    <div class="input-unit-wrap" style="max-width:90px;">
+                        <input type="text" id="min" class="form-input" placeholder="분" inputmode="numeric" autocomplete="off" oninput="limitAndMove(this,59,'')">
+                        <span class="input-unit">분</span>
+                    </div>
+                </div>
+            </div>
+            <button class="main-btn" onclick="runAnalysis()">✦ 사주를 펼쳐보시오 ✦</button>
+        </div>
+    </div>
+    </div>
+</div>
+
+<div class="landing-divider"></div>
+
+<!-- 유도령의 한 마디 -->
+<div class="landing-section yudo-quote-section">
+    <p class="landing-tag">✦ 유도령의 한 마디 ✦</p>
+    <div class="yudo-quote-wrap">
+        <div class="yudo-quote-symbol">語</div>
+        <blockquote class="yudo-quote" id="yudoQuote"></blockquote>
+        <p class="yudo-quote-sub" id="yudoQuoteSub"></p>
+    </div>
+</div>
+
+<div class="landing-divider"></div>
+
+<!-- 2026 병오년 -->
+<div class="landing-section">
+    <p class="landing-tag">✦ 2026 丙午年 ✦</p>
+    <h2 class="landing-h2">올해는 어떤 해인가</h2>
+    <p class="landing-sub">불의 말(火馬)이 달리는 병오년</p>
+
+    <div class="byongo-card">
+        <div class="byongo-hanja">丙午</div>
+        <p class="byongo-intro">하늘의 불[丙]과 땅의 말[午]이 만나는 해이오. 움직이는 자에게는 인생의 전환점이, 멈춰 있는 자에게는 변화의 파도가 밀려오는 해이니라.</p>
+    </div>
+
+    <div class="byongo-grid">
+        <div class="byongo-item good">
+            <div class="byongo-item-icon">🔥</div>
+            <h4>열정과 도전의 해</h4>
+            <p>火의 기운이 넘치는 해이오. 새로 시작하기엔 더없이 좋은 때이니라.</p>
+        </div>
+        <div class="byongo-item good">
+            <div class="byongo-item-icon">🐎</div>
+            <h4>인연과 기회의 해</h4>
+            <p>예상치 못한 만남과 기회가 찾아오는 해이오. 문을 열어두시오.</p>
+        </div>
+        <div class="byongo-item caution">
+            <div class="byongo-item-icon">⚡</div>
+            <h4>충동적 결정 주의</h4>
+            <p>불의 기운이 강한 만큼 감정에 휩쓸린 선택은 禍를 부를 수 있소.</p>
+        </div>
+        <div class="byongo-item caution">
+            <div class="byongo-item-icon">💧</div>
+            <h4>건강·재물 관리 필요</h4>
+            <p>火가 강할수록 水 기운이 약해지오. 건강과 씀씀이를 챙기시오.</p>
+        </div>
+    </div>
+
+    <div class="byongo-cta">
+        <p class="byongo-cta-text">2026년이 그대에게 어떤 해인지<br>내 사주로 직접 확인하시오</p>
+        <a href="/sinnyeon" class="byongo-btn">🔥 나의 2026년 운세 보기</a>
+    </div>
+</div>
+
+<div class="landing-divider"></div>
+
+<!-- 신뢰 포인트 -->
+<div class="landing-section">
+    <p class="landing-tag">✦ WHY YUDORYUNG ✦</p>
+    <h2 class="landing-h2">왜 유도령인가</h2>
+    <p class="landing-sub">다른 운세 서비스와 이런 점이 달라요</p>
+    <div class="features-list">
+        <div class="feature-item">
+            <div class="feature-icon-wrap">📐</div>
+            <div class="feature-text">
+                <h4><em>실제 만세력</em>으로 계산한 정확한 사주팔자</h4>
+                <p>AI가 그럴듯하게 지어내는 사주가 아닙니다. 절기 기준 월지지, 갑자 기준 일주까지 전통 명리학 공식으로 직접 계산해요. 시중 만세력 앱과 비교해도 동일한 결과가 나옵니다.</p>
+            </div>
+        </div>
+        <div class="feature-item">
+            <div class="feature-icon-wrap">🎯</div>
+            <div class="feature-text">
+                <h4>"이건 나 얘기다" 싶은 <em>개인화 해석</em></h4>
+                <p>일간의 오행 특성, 강약, 대운의 흐름까지 나만을 위한 해석을 드려요. 庚金(경금)·甲木(갑목) 같은 명리학 용어로 풀되 누구나 이해할 수 있게 설명합니다. "운이 좋아요" 같은 말은 없어요.</p>
+            </div>
+        </div>
+        <div class="feature-item">
+            <div class="feature-icon-wrap">📜</div>
+            <div class="feature-text">
+                <h4>성격·연애·직업·재물·건강 <em>7개 항목 심층 분석</em></h4>
+                <p>단순한 운세 풀이가 아닙니다. 일간 오행부터 격국, 재성·관성·식상 분석까지 7개 항목을 최소 50줄 이상 구체적으로 풀어드려요. 올해 좋은 달·주의할 달까지 월 단위로 짚어드립니다.</p>
+            </div>
+        </div>
+        <div class="feature-item">
+            <div class="feature-icon-wrap">🔒</div>
+            <div class="feature-text">
+                <h4><em>회원가입 없이</em> 즉시 · 정보 저장 안 함</h4>
+                <p>이름과 생년월일만 입력하면 바로 시작돼요. 가입 절차 없고 입력한 정보는 서버에 저장되지 않아 안심하고 이용하실 수 있어요.</p>
+            </div>
+        </div>
+        <div class="feature-item">
+            <div class="feature-icon-wrap">💰</div>
+            <div class="feature-text">
+                <h4>철학관 방문보다 <em>훨씬 부담 없는 비용</em></h4>
+                <p>오프라인 점집은 예약도 필요하고 비용도 만만치 않죠. 유도령은 언제든 바로, 훨씬 합리적인 비용으로 정통 사주 분석을 받아볼 수 있어요.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="landing-divider"></div>
+
+<!-- 후기 -->
+<div class="landing-section" style="padding-bottom:40px;">
+    <p class="landing-tag">✦ REVIEWS ✦</p>
+    <h2 class="landing-h2">실제 이용자 후기</h2>
+    <p class="landing-sub">직접 써주신 후기들이에요</p>
+</div>
+<div class="reviews-wrap" style="position:relative;z-index:1;padding-bottom:80px;">
+    <div class="reviews-fade-left"></div>
+    <div class="reviews-fade-right"></div>
+    <div class="reviews-track">
+        <div class="review-card">
+            <div class="review-stars">★★★★★</div>
+            <p class="review-text">"신년운세 봤는데 1월부터 12월까지 흐름이 딱 맞아서 소름돋았어요. 월별로 이렇게 구체적인 건 처음이에요"</p>
+            <div class="review-author"><div class="review-avatar">김</div><div><div class="review-name">김○○ · 29세</div><div class="review-cat">🔥 신년운세</div></div></div>
+        </div>
+        <div class="review-card">
+            <div class="review-stars">★★★★★</div>
+            <p class="review-text">"이직 고민 중이었는데 올해 하반기 전환점이라고 딱 집어주더니 진짜 좋은 기회가 왔어요. 신기해요"</p>
+            <div class="review-author"><div class="review-avatar">이</div><div><div class="review-name">이○○ · 35세</div><div class="review-cat">🔮 정통사주</div></div></div>
+        </div>
+        <div class="review-card">
+            <div class="review-stars">★★★★★</div>
+            <p class="review-text">"만세력 앱이랑 직접 비교해봤는데 사주팔자가 정확하게 나왔어요. 다른 운세 앱이랑 차원이 다른 수준"</p>
+            <div class="review-author"><div class="review-avatar">박</div><div><div class="review-name">박○○ · 41세</div><div class="review-cat">🔮 정통사주</div></div></div>
+        </div>
+        <div class="review-card">
+            <div class="review-stars">★★★★★</div>
+            <p class="review-text">"짝궁합 봤는데 저랑 남자친구 관계 패턴을 너무 정확하게 짚어줘서 깜짝 놀랐어요. 둘이 같이 보고 대화 많이 했어요"</p>
+            <div class="review-author"><div class="review-avatar">최</div><div><div class="review-name">최○○ · 27세</div><div class="review-cat">💕 짝궁합</div></div></div>
+        </div>
+        <div class="review-card">
+            <div class="review-stars">★★★★★</div>
+            <p class="review-text">"금전운에서 그 달 투자 조심하라고 했는데 진짜 손실 날 뻔했어요. 미리 알아서 다행이었어요"</p>
+            <div class="review-author"><div class="review-avatar">한</div><div><div class="review-name">한○○ · 38세</div><div class="review-cat">🔮 정통사주</div></div></div>
+        </div>
+        <div class="review-card">
+            <div class="review-stars">★★★★★</div>
+            <p class="review-text">"4900원에 이 퀄리티 실화임? 철학관 5만원보다 훨씬 더 자세하고 구체적이에요. 가성비 넘사벽"</p>
+            <div class="review-author"><div class="review-avatar">오</div><div><div class="review-name">오○○ · 33세</div><div class="review-cat">🔥 신년운세</div></div></div>
+        </div>
+        <div class="review-card">
+            <div class="review-stars">★★★★★</div>
+            <p class="review-text">"처음엔 반신반의했는데 성격 묘사가 너무 정확해서 가족들한테도 다 추천해줬어요. 엄마도 보셨어요"</p>
+            <div class="review-author"><div class="review-avatar">정</div><div><div class="review-name">정○○ · 45세</div><div class="review-cat">🔮 정통사주</div></div></div>
+        </div>
+        <div class="review-card">
+            <div class="review-stars">★★★★★</div>
+            <p class="review-text">"재물운 분석이 정말 구체적이에요. 어떤 달에 지출 줄이고 어떤 달에 기회 잡으라는지 딱 나오더라고요"</p>
+            <div class="review-author"><div class="review-avatar">강</div><div><div class="review-name">강○○ · 31세</div><div class="review-cat">🔮 정통사주</div></div></div>
+        </div>
+        <div class="review-card">
+            <div class="review-stars">★★★★★</div>
+            <p class="review-text">"일간 오행부터 격국까지 명리학 용어가 나오는데 다 설명해줘서 이해하기 쉬웠어요. 전문성이 느껴졌어요"</p>
+            <div class="review-author"><div class="review-avatar">윤</div><div><div class="review-name">윤○○ · 37세</div><div class="review-cat">🔥 신년운세</div></div></div>
+        </div>
+        <div class="review-card">
+            <div class="review-stars">★★★★★</div>
+            <p class="review-text">"남편이랑 궁합 봤어요. 우리가 왜 맨날 그 부분에서 부딪히는지 딱 짚어줘서 서로 많이 이해하게 됐어요"</p>
+            <div class="review-author"><div class="review-avatar">임</div><div><div class="review-name">임○○ · 42세</div><div class="review-cat">💕 짝궁합</div></div></div>
+        </div>
+        <div class="review-card">
+            <div class="review-stars">★★★★★</div>
+            <p class="review-text">"회원가입 없이 바로 되는 거 진짜 편해요. 다른 운세 앱은 가입하고 광고 보고 해야 하는데 여기는 깔끔해요"</p>
+            <div class="review-author"><div class="review-avatar">신</div><div><div class="review-name">신○○ · 26세</div><div class="review-cat">🔮 정통사주</div></div></div>
+        </div>
+        <div class="review-card">
+            <div class="review-stars">★★★★★</div>
+            <p class="review-text">"연애운에서 올해 몇 월에 인연 만날 확률 높다고 했는데 그 달에 진짜 좋은 분 만났어요. 신기방기"</p>
+            <div class="review-author"><div class="review-avatar">권</div><div><div class="review-name">권○○ · 28세</div><div class="review-cat">🔥 신년운세</div></div></div>
+        </div>
+        <div class="review-card">
+            <div class="review-stars">★★★★★</div>
+            <p class="review-text">"사주팔자 표가 나오고 오행 그래프까지 시각적으로 보여줘서 이해하기 훨씬 좋아요. 다른 데는 이런 거 없던데"</p>
+            <div class="review-author"><div class="review-avatar">황</div><div><div class="review-name">황○○ · 34세</div><div class="review-cat">🔮 정통사주</div></div></div>
+        </div>
+        <div class="review-card">
+            <div class="review-stars">★★★★★</div>
+            <p class="review-text">"건강운도 나오는 게 의외였어요. 올해 이 시기에 몸 조심하라고 했는데 그 시기에 진짜 컨디션이 안 좋았어요"</p>
+            <div class="review-author"><div class="review-avatar">송</div><div><div class="review-name">송○○ · 49세</div><div class="review-cat">🔮 정통사주</div></div></div>
+        </div>
+        <div class="review-card">
+            <div class="review-stars">★★★★★</div>
+            <p class="review-text">"남자친구랑 왜 이렇게 잘 맞는지 궁금했는데 오행 상생 관계라고 설명해줘서 납득됐어요. 이런 분석이 필요했어요"</p>
+            <div class="review-author"><div class="review-avatar">조</div><div><div class="review-name">조○○ · 30세</div><div class="review-cat">💕 짝궁합</div></div></div>
+        </div>
+        <div class="review-card">
+            <div class="review-stars">★★★★★</div>
+            <p class="review-text">"직업운 분석이 핵심을 찌르더라고요. 제가 왜 현재 직업에서 갑갑한지, 어떤 환경에서 능력 발휘되는지 딱 맞아요"</p>
+            <div class="review-author"><div class="review-avatar">전</div><div><div class="review-name">전○○ · 36세</div><div class="review-cat">🔮 정통사주</div></div></div>
+        </div>
+        <div class="review-card">
+            <div class="review-stars">★★★★★</div>
+            <p class="review-text">"상반기 하반기 흐름 설명이 진짜 체계적이에요. 막연한 '좋다 나쁘다'가 아니라 구체적인 시기로 알려줘요"</p>
+            <div class="review-author"><div class="review-avatar">장</div><div><div class="review-name">장○○ · 40세</div><div class="review-cat">🔥 신년운세</div></div></div>
+        </div>
+        <div class="review-card">
+            <div class="review-stars">★★★★★</div>
+            <p class="review-text">"짝궁합 결과에 항목별 점수까지 나와서 한눈에 보기 좋았어요. 결혼 고민 중인데 많이 참고됐어요"</p>
+            <div class="review-author"><div class="review-avatar">류</div><div><div class="review-name">류○○ · 32세</div><div class="review-cat">💕 짝궁합</div></div></div>
+        </div>
+        <div class="review-card">
+            <div class="review-stars">★★★★★</div>
+            <p class="review-text">"부모님께 신년운세 보여드렸어요. 어르신들도 쉽게 읽을 수 있고 내용도 알차서 엄청 좋아하셨어요"</p>
+            <div class="review-author"><div class="review-avatar">나</div><div><div class="review-name">나○○ · 52세</div><div class="review-cat">🔥 신년운세</div></div></div>
+        </div>
+        <div class="review-card">
+            <div class="review-stars">★★★★★</div>
+            <p class="review-text">"올해 이직하려고 했는데 사주에서 적합한 달이 딱 나와서 그때 맞춰서 움직였어요. 진짜 잘 됐어요"</p>
+            <div class="review-author"><div class="review-avatar">서</div><div><div class="review-name">서○○ · 39세</div><div class="review-cat">🔮 정통사주</div></div></div>
+        </div>
+    </div>
+</div>
+
+<div class="landing-divider"></div>
+
+<!-- FAQ -->
+<div class="landing-section">
+    <p class="landing-tag">✦ FAQ ✦</p>
+    <h2 class="landing-h2">자주 묻는 질문</h2>
+    <p class="landing-sub" style="margin-bottom:32px;">많이 물어보신 것들이에요</p>
+    <div class="faq-list">
+        <div class="faq-item">
+            <div class="faq-q" onclick="toggleFaq(this)">사주 계산이 정말 정확한가요?</div>
+            <div class="faq-a"><div class="faq-a-inner">AI가 임의로 사주를 "만들어내는" 방식이 아닙니다. 전통 명리학 만세력 공식으로 직접 계산해요. 년주·월주·일주·시주 모두 검증된 기준일과 절기를 적용하기 때문에 시중 만세력 앱과 동일한 결과가 나옵니다.</div></div>
+        </div>
+        <div class="faq-item">
+            <div class="faq-q" onclick="toggleFaq(this)">태어난 시간을 모르면 어떻게 하나요?</div>
+            <div class="faq-a"><div class="faq-a-inner">'시간모름'을 체크하시면 시주를 제외한 나머지 세 기둥으로 분석해드려요. 시주는 전체 사주의 일부이기 때문에 나머지 분석의 정확도에는 크게 영향을 주지 않습니다.</div></div>
+        </div>
+        <div class="faq-item">
+            <div class="faq-q" onclick="toggleFaq(this)">신년운세·정통사주·짝궁합의 차이는?</div>
+            <div class="faq-a"><div class="faq-a-inner">신년운세는 2026년 한 해의 월별 흐름에 집중한 분석이에요. 정통사주는 연애·직업·금전·올해운을 종합적으로 깊이 분석합니다. 짝궁합은 두 사람의 사주를 함께 보며 인연의 깊이와 관계 패턴을 분석해요.</div></div>
+        </div>
+        <div class="faq-item">
+            <div class="faq-q" onclick="toggleFaq(this)">결제 후 환불이 되나요?</div>
+            <div class="faq-a"><div class="faq-a-inner">결제 즉시 상세 분석이 제공되는 디지털 콘텐츠 특성상 결제 후 환불은 어렵습니다. 단, 기술적 오류로 서비스를 이용하지 못하신 경우에는 문의해 주세요.</div></div>
+        </div>
+        <div class="faq-item">
+            <div class="faq-q" onclick="toggleFaq(this)">개인정보는 안전한가요?</div>
+            <div class="faq-a"><div class="faq-a-inner">입력하신 정보는 사주 분석 목적으로만 사용됩니다. 별도 서버에 저장되지 않으며 세션 종료 후 자동으로 파기됩니다. 광고나 마케팅 목적으로는 절대 활용하지 않아요.</div></div>
+        </div>
+    </div>
+</div>
+
+<div class="landing-divider"></div>
+
+<!-- CTA -->
+
+
+
+
+<p class="footer-ornament">✦ &nbsp; 유도령의 천기직언 &nbsp; ✦</p>
+
+<!-- 로딩 -->
+<div class="loading-screen" id="loadingScreen">
+    <div class="loading-symbol">
+        <svg width="90" height="90" viewBox="0 0 90 90">
+            <circle cx="45" cy="45" r="38" fill="none" stroke="rgba(201,168,76,0.08)" stroke-width="1.5"/>
+            <circle cx="45" cy="45" r="38" fill="none" stroke="url(#lgold)" stroke-width="1.5"
+                stroke-dasharray="60 180" stroke-linecap="round">
+                <animateTransform attributeName="transform" type="rotate" from="0 45 45" to="360 45 45" dur="2s" repeatCount="indefinite"/>
+            </circle>
+            <circle cx="45" cy="45" r="28" fill="none" stroke="rgba(201,168,76,0.12)" stroke-width="1"/>
+            <circle cx="45" cy="45" r="28" fill="none" stroke="rgba(201,168,76,0.4)" stroke-width="1"
+                stroke-dasharray="30 146" stroke-linecap="round">
+                <animateTransform attributeName="transform" type="rotate" from="360 45 45" to="0 45 45" dur="1.4s" repeatCount="indefinite"/>
+            </circle>
+            <text x="45" y="52" text-anchor="middle" fill="rgba(201,168,76,0.7)" font-size="22" font-family="serif">命</text>
+            <defs>
+                <linearGradient id="lgold" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stop-color="#c9a84c"/>
+                    <stop offset="100%" stop-color="#e8c97a"/>
+                </linearGradient>
+            </defs>
+        </svg>
+    </div>
+    <p class="loading-msg" id="loadingMsg">천기를 열어보는 중이오...</p>
+    <div class="loading-dots">
+        <div class="loading-dot"></div>
+        <div class="loading-dot"></div>
+        <div class="loading-dot"></div>
+    </div>
+</div>
+
+<!-- 결과 화면 -->
+<div class="result-screen" id="resultScreen">
+    <div class="result-inner">
+        <div class="result-header">
+            <p class="result-header-title">🔮 유도령의 계시</p>
+            <button class="result-back-btn" onclick="closeResult()">← 서비스 선택으로</button>
+        </div>
+
+        <!-- 공유하기 -->
+        <div class="share-section">
+            <p class="share-title">✦ 친구에게 공유하기 ✦</p>
+            <div class="share-btns">
+                <button class="share-btn-kakao" onclick="shareKakao()">
+                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 1.5C4.86 1.5 1.5 4.14 1.5 7.38c0 2.1 1.38 3.93 3.45 4.98L4.2 15l3.57-2.34c.39.06.81.09 1.23.09 4.14 0 7.5-2.64 7.5-5.88S13.14 1.5 9 1.5z" fill="#1a1200"/></svg>
+                    카카오톡 공유
+                </button>
+                <button class="share-btn-link" onclick="copyLink()">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6.5 9.5a3.5 3.5 0 005 0l2-2a3.5 3.5 0 00-5-5L7.5 3.5" stroke="#c9a84c" stroke-width="1.5" stroke-linecap="round"/><path d="M9.5 6.5a3.5 3.5 0 00-5 0l-2 2a3.5 3.5 0 005 5L8.5 12.5" stroke="#c9a84c" stroke-width="1.5" stroke-linecap="round"/></svg>
+                    링크 복사
+                </button>
+            </div>
+        </div>
+
+        <!-- 오행 -->
+        <div class="oheng-section">
+            <p class="section-title">✦ 오행의 이치</p>
+            <div class="oheng-pentagon-wrap">
+                <svg viewBox="0 -8 280 296" xmlns="http://www.w3.org/2000/svg">
+                    <!-- 오행 오각형: 木(12시) → 火(우상) → 土(우하) → 金(좌하) → 水(좌상) -->
+                    <polygon points="140,25 249,105 208,233 72,233 31,105" fill="none" stroke="rgba(201,168,76,0.1)" stroke-width="1"/>
+                    <!-- 내부 별 연결선 -->
+                    <line x1="140" y1="25" x2="208" y2="233" stroke="rgba(201,168,76,0.06)" stroke-width="1"/>
+                    <line x1="249" y1="105" x2="72" y2="233" stroke="rgba(201,168,76,0.06)" stroke-width="1"/>
+                    <line x1="208" y1="233" x2="31" y2="105" stroke="rgba(201,168,76,0.06)" stroke-width="1"/>
+                    <line x1="72" y1="233" x2="249" y2="105" stroke="rgba(201,168,76,0.06)" stroke-width="1"/>
+                    <line x1="31" y1="105" x2="140" y2="25" stroke="rgba(201,168,76,0.06)" stroke-width="1"/>
+                    <!-- 木 - 12시 (상단 중앙) -->
+                    <circle cx="140" cy="25" r="26" fill="rgba(40,80,20,0.4)" stroke="rgba(80,160,40,0.55)" stroke-width="1.5"/>
+                    <text x="140" y="20" text-anchor="middle" fill="#7acc50" font-size="15" font-family="serif" font-weight="bold">木</text>
+                    <text x="140" y="36" text-anchor="middle" fill="#5a9a30" font-size="9" font-family="sans-serif">목</text>
+                    <!-- 火 - 우상 -->
+                    <circle cx="249" cy="105" r="26" fill="rgba(100,20,5,0.4)" stroke="rgba(200,60,20,0.55)" stroke-width="1.5"/>
+                    <text x="249" y="100" text-anchor="middle" fill="#ff6640" font-size="15" font-family="serif" font-weight="bold">火</text>
+                    <text x="249" y="116" text-anchor="middle" fill="#cc4420" font-size="9" font-family="sans-serif">화</text>
+                    <!-- 土 - 우하 -->
+                    <circle cx="208" cy="233" r="26" fill="rgba(80,60,0,0.4)" stroke="rgba(180,140,0,0.55)" stroke-width="1.5"/>
+                    <text x="208" y="228" text-anchor="middle" fill="#ddaa20" font-size="15" font-family="serif" font-weight="bold">土</text>
+                    <text x="208" y="244" text-anchor="middle" fill="#aa8800" font-size="9" font-family="sans-serif">토</text>
+                    <!-- 金 - 좌하 -->
+                    <circle cx="72" cy="233" r="26" fill="rgba(20,20,80,0.4)" stroke="rgba(100,120,200,0.55)" stroke-width="1.5"/>
+                    <text x="72" y="228" text-anchor="middle" fill="#99aaee" font-size="15" font-family="serif" font-weight="bold">金</text>
+                    <text x="72" y="244" text-anchor="middle" fill="#7788cc" font-size="9" font-family="sans-serif">금</text>
+                    <!-- 水 - 좌상 -->
+                    <circle cx="31" cy="105" r="26" fill="rgba(5,30,80,0.4)" stroke="rgba(20,100,180,0.55)" stroke-width="1.5"/>
+                    <text x="31" y="100" text-anchor="middle" fill="#44aaee" font-size="15" font-family="serif" font-weight="bold">水</text>
+                    <text x="31" y="116" text-anchor="middle" fill="#2277bb" font-size="9" font-family="sans-serif">수</text>
+                    <!-- 중앙 음양 -->
+                    <circle cx="140" cy="140" r="18" fill="rgba(201,168,76,0.06)" stroke="rgba(201,168,76,0.18)" stroke-width="1"/>
+                    <text x="140" y="144" text-anchor="middle" fill="rgba(201,168,76,0.5)" font-size="10" font-family="serif">陰陽</text>
+                </svg>
+            </div>
+            <div class="oheng-strong-weak">
+                <div class="oheng-sw-row" id="ohengStrong"></div>
+                <div class="oheng-sw-row" id="ohengWeak"></div>
+            </div>
+        </div>
+
+        <!-- 사주 표 -->
+        <div class="saju-section">
+            <p class="section-title">✦ 사주팔자</p>
+            <div class="saju-table">
+                <div class="saju-header">
+                    <div class="saju-header-cell">시주</div>
+                    <div class="saju-header-cell">일주</div>
+                    <div class="saju-header-cell">월주</div>
+                    <div class="saju-header-cell">년주</div>
+                </div>
+                <div class="row-tag sky">天 · 천간</div>
+                <div class="saju-row sky-bg">
+                    <div class="saju-cell" id="cell-시주천간"></div>
+                    <div class="saju-cell" id="cell-일주천간"></div>
+                    <div class="saju-cell" id="cell-월주천간"></div>
+                    <div class="saju-cell" id="cell-년주천간"></div>
+                </div>
+                <div class="row-tag earth">地 · 지지</div>
+                <div class="saju-row earth-bg">
+                    <div class="saju-cell" id="cell-시주지지"></div>
+                    <div class="saju-cell" id="cell-일주지지"></div>
+                    <div class="saju-cell" id="cell-월주지지"></div>
+                    <div class="saju-cell" id="cell-년주지지"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 맛보기 -->
+        <div class="preview-section">
+            <p class="section-title">✦ 운세 맛보기</p>
+            <div class="result-box" id="previewText"></div>
+        </div>
+
+        <!-- 블러 유혹 -->
+        <div class="tease-section" id="teaseSection">
+            <!-- 타이틀: tease-inner 완전 바깥, position 독립 -->
+            <div class="tease-title-row">
+                <span class="tease-title-text" id="teaseSectionTitle">✦ 상세 운세</span>
+            </div>
+            <!-- 블러박스 + 오버레이: 타이틀과 별개 -->
+            <div class="tease-inner">
+                <div class="tease-box" id="teaseText"></div>
+                <div class="tease-overlay">
+                    <div class="tease-lock">🔒</div>
+                    <p class="tease-text" id="teaseTitle">상세 운세가 준비되었소</p>
+                    <p class="tease-subtext">복채를 올리시면<br>상세 분석이 시작되오</p>
+                    <button class="unlock-btn" onclick="openPayModal()">✦ 지금 열람하기<span class="price-badge">9,900원</span></button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 결제 후: 상세 분석 -->
+        <div class="detail-section" id="detailSection">
+            <p class="section-title" id="detailTitle">✦ 상세 운세</p>
+            <div class="result-box" id="detailText"></div>
+        </div>
+
+        <!-- 결제 후: 채팅 -->
+        <div class="chat-section" id="chatSection">
+            <div class="chat-header">
+                <p class="section-title" style="margin-bottom:0;">✦ 유도령과의 문답</p>
+                <p class="chat-remaining">남은 질문 <span id="remainingCount">3</span>회</p>
+            </div>
+            <div class="chat-messages" id="chatMessages">
+                <div class="typing-indicator" id="typingIndicator">
+                    <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#2a1a50,#1a1030);border:1px solid rgba(201,168,76,0.3);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">🔮</div>
+                    <div class="typing-dots">
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="chat-done" id="chatDone" style="display:none;">
+                ✦ 세 번의 문답이 모두 끝났소 · 귀한 인연이었소이다 ✦
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 채팅 입력창 (하단 고정) -->
+<div class="chat-input-wrap" id="chatInputWrap">
+    <div class="chat-input-inner">
+        <textarea class="chat-textarea" id="chatInput" placeholder="유도령에게 물어보시오..." rows="1"
+            oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,100)+'px';"
+            onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChat();}"></textarea>
+        <button class="chat-send-btn" onclick="sendChat()" id="chatSendBtn">↑</button>
+    </div>
+</div>
+
+<!-- 결제 모달 -->
+<div class="modal" id="payModal">
+    <div class="modal-box">
+        <div class="modal-handle"></div>
+        <p class="modal-cat">🔮 종합 사주 분석</p>
+        <div class="modal-symbol">🧧</div>
+        <h3 class="modal-title">복채를 올리시겠습니까</h3>
+        <p class="modal-desc">유도령이 <strong style="color:var(--gold-light)" id="modalCatName">종합 사주</strong>를<br>낱낱이 풀어드리리다</p>
+        <div class="modal-features">
+            <div class="modal-feature"><span class="modal-feature-icon">📜</span>상세 분석</div>
+        </div>
+        <button class="kakao-btn" onclick="requestPay()">💛 카카오페이 · 9,900원</button>
+        <button class="modal-close-btn" onclick="document.getElementById('payModal').classList.remove('active')">닫기</button>
+    </div>
+</div>
+
+<script>
+    // 별
+    const starsEl = document.getElementById('stars');
+    for (let i = 0; i < 120; i++) {
+        const s = document.createElement('div');
+        s.className = 'star';
+        const sz = Math.random()*2.5+0.5;
+        s.style.cssText = `width:${sz}px;height:${sz}px;top:${Math.random()*100}%;left:${Math.random()*100}%;--duration:${Math.random()*3+2}s;animation-delay:${Math.random()*3}s;`;
+        starsEl.appendChild(s);
+    }
+
+    // IMP 초기화 - 스크립트 로드 완료 후
+    function initIMP() {
+        if (window.IMP) {
+            window.IMP.init("imp50011546");
+        } else {
+            setTimeout(initIMP, 300);
+        }
+    }
+    document.addEventListener('DOMContentLoaded', initIMP);
+
+    const CAT_INFO = {
+        love:  { icon:'💕', name:'연애운' },
+        job:   { icon:'💼', name:'직업운' },
+        money: { icon:'💰', name:'금전운' },
+        child: { icon:'👶', name:'자식운' }
+    };
+    const OHENG_CLASS = { 목:'mu', 화:'hwa', 토:'to', 금:'geum', 수:'su' };
+    const loadingMessages = [
+        "천기를 열어보는 중이오...", "사주의 기운을 살피는 중이오...",
+        "년주와 월주를 분석하는 중이오...", "일주와 시주를 풀어내는 중이오...",
+        "오행의 균형을 읽는 중이오...", "운명의 실마리를 찾는 중이오...",
+        "유도령이 천기를 관찰하는 중이오...", "곧 계시가 내려올 것이오..."
+    ];
+
+    let selectedCategory = null;
+    let currentSessionId = null;
+    let msgInterval = null;
+
+    function selectCategory(cat, el) {
+        selectedCategory = cat;
+        document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('selected'));
+        el.classList.add('selected');
+        document.getElementById('step1Btn').disabled = false;
+    }
+
+    function goStep2() {
+        document.getElementById('step1').classList.remove('active');
+        document.getElementById('step2').classList.add('active');
+        document.getElementById('dot1').classList.remove('active');
+        document.getElementById('dot2').classList.add('active');
+        document.getElementById('cardTitle').innerText = '✦ 생년월일을 입력하시오 ✦';
+        clearForm();
+    }
+
+    function clearForm() {
+        ['userName','year','month','day','hour','min'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) { el.value = ''; el.removeAttribute('value'); }
+        });
+        document.getElementById('userGender').selectedIndex = 0;
+        document.getElementById('ampm').selectedIndex = 0;
+        document.getElementById('noTime').checked = false;
+        ['ampm','hour','min'].forEach(id => document.getElementById(id).disabled = false);
+        // 브라우저 자동완성이 딜레이 후 채워지므로 한 번 더
+        setTimeout(() => {
+            ['userName','year','month','day','hour','min'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.value = '';
+            });
+        }, 50);
+        setTimeout(() => {
+            ['userName','year','month','day','hour','min'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.value = '';
+            });
+        }, 200);
+    }
+
+    function goStep1() {
+        document.getElementById('step2').classList.remove('active');
+        document.getElementById('step1').classList.add('active');
+        document.getElementById('dot2').classList.remove('active');
+        document.getElementById('dot1').classList.add('active');
+        document.getElementById('cardTitle').innerText = '어떤 운세를 보시겠소?';
+        clearForm();
+    }
+    function selectCategory(){} // 호환성 유지용 빈 함수
+
+    function limitAndMove(el, max, nextId) {
+        el.value = el.value.replace(/[^0-9]/g,'').slice(0,2);
+        const v = parseInt(el.value);
+        if (!isNaN(v) && v > max) el.value = String(max);
+        if (el.value.length >= 2 && nextId) document.getElementById(nextId).focus();
+    }
+
+
+    const calMode = {};  // { '': 'SOL', '1': 'SOL', '2': 'SOL' }
+
+    function setCal(mode, n) {
+        calMode[n] = mode;
+        document.getElementById('calBtn_SOL' + n).classList.toggle('active', mode === 'SOL');
+        document.getElementById('calBtn_LUN' + n).classList.toggle('active', mode === 'LUN');
+    }
+
+    function getBirth(n) {
+        const y = document.getElementById('year' + n)?.value || document.getElementById('year')?.value;
+        const m = document.getElementById('month' + n)?.value || document.getElementById('month')?.value;
+        const d = document.getElementById('day' + n)?.value || document.getElementById('day')?.value;
+        const isLunar = (calMode[n] || 'SOL') === 'LUN';
+        const isLeap = isLunar && (document.getElementById('leapCheck' + n)?.checked);
+        return { birth: y + '-' + m + '-' + d, lunar: isLunar, leap: isLeap };
+    }
+
+    function toggleTime() {
+        const dis = document.getElementById('noTime').checked;
+        ['ampm','hour','min'].forEach(id => document.getElementById(id).disabled = dis);
+    }
+
+    function startLoading(msg) {
+        let i = 0;
+        const msgs = msg ? [msg, ...loadingMessages] : loadingMessages;
+        document.getElementById('loadingMsg').innerText = msgs[0];
+        document.getElementById('loadingScreen').classList.add('active');
+        msgInterval = setInterval(() => {
+            i = (i+1) % msgs.length;
+            const el = document.getElementById('loadingMsg');
+            el.style.animation = 'none'; el.offsetHeight;
+            el.style.animation = 'msgFade 0.5s ease';
+            el.innerText = msgs[i];
+        }, 2200);
+    }
+
+    function stopLoading() {
+        clearInterval(msgInterval);
+        document.getElementById('loadingScreen').classList.remove('active');
+    }
+
+    function getUserData() {
+        const noTime = document.getElementById('noTime').checked;
+        return {
+            name:     document.getElementById('userName').value.trim(),
+            gender:   document.getElementById('userGender').value,
+            birth:    `${document.getElementById('year').value}-${document.getElementById('month').value}-${document.getElementById('day').value}`,
+            time:     noTime ? "모름" : `${document.getElementById('ampm').value} ${document.getElementById('hour').value}시 ${document.getElementById('min').value}분`,
+        };
+    }
+
+    function runAnalysis() {
+        const name  = document.getElementById('userName').value.trim();
+        const year  = document.getElementById('year').value.trim();
+        const month = document.getElementById('month').value.trim();
+        const day   = document.getElementById('day').value.trim();
+        const noTime = document.getElementById('noTime').checked;
+        const hour  = document.getElementById('hour').value.trim();
+        const min   = document.getElementById('min').value.trim();
+
+        if (!name) { alert("성함을 입력해주시오!"); return; }
+        if (!year||!month||!day) { alert("생년월일을 입력해주시오!"); return; }
+        if (!noTime&&(!hour||!min)) { alert("태어난 시간을 입력하시거나 '시간모름'을 체크해주시오!"); return; }
+
+        startLoading();
+        fetch('/analyze', {
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify(getUserData())
+        })
+        .then(r=>r.json())
+        .then(data => { stopLoading(); showResult(data); })
+        .catch(() => { stopLoading(); alert("유도령과의 연결이 고르지 못하오. 잠시 후 다시 시도하시오!"); });
+    }
+
+    function fillSajuCell(cellId, info) {
+        const cell = document.getElementById(cellId);
+        if (!cell) return;
+        if (!info) { 
+            cell.innerHTML = '<span class="saju-hanja" style="color:rgba(201,168,76,0.15);font-size:14px;">時</span><span class="saju-hangul" style="font-size:9px;color:rgba(201,168,76,0.2);">불명</span>';
+            return; 
+        }
+        const cls = OHENG_CLASS[info.oheng] || '';
+        cell.innerHTML = `
+            <span class="saju-hanja ${cls}">${info.hanja}</span>
+            <span class="saju-hangul">${info.hangul}</span>
+            <span class="saju-oheng-badge ${cls}">${info.oheng}</span>
+        `;
+    }
+
+    function showResult(data) {
+        const cat  = CAT_INFO[selectedCategory];
+        const saju = data.saju || {};
+
+        document.getElementById('ohengStrong').innerHTML = saju['강한기운'] ? `<em>💪 강한 기운</em> · ${saju['강한기운']}` : '';
+        document.getElementById('ohengWeak').innerHTML   = saju['약한기운'] ? `<em>⚠️ 약한 기운</em> · ${saju['약한기운']}` : '';
+
+        ['시주천간','일주천간','월주천간','년주천간','시주지지','일주지지','월주지지','년주지지']
+            .forEach(key => fillSajuCell(`cell-${key}`, saju[key]));
+
+        document.getElementById('previewText').innerText = data.preview || '';
+        document.getElementById('teaseSectionTitle').innerText = '✦ 종합 사주 상세 분석';
+        document.getElementById('teaseTitle').innerText = '🔮 종합 사주 상세 결과가 준비되었소';
+        document.getElementById('teaseText').innerText  = '유도령이 그대의 사주 깊은 곳을 들여다보았소. 재물과 인연, 직업과 자식에 이르기까지 운명의 실타래가 낱낱이 보이는구료. 올해의 흐름과 주의할 시기, 행운의 달까지 모두 담겨있소...';
+
+        document.getElementById('teaseSection').style.display = 'block';
+        document.getElementById('detailSection').classList.remove('active');
+        document.getElementById('chatSection').classList.remove('active');
+        document.getElementById('chatInputWrap').classList.remove('active');
+
+        document.getElementById('modalCatName').innerText = '종합 사주';
+        document.getElementById('detailTitle').innerText  = '✦ 종합 사주 상세 분석';
+
+        document.getElementById('resultScreen').classList.add('active');
+        document.getElementById('resultScreen').scrollTop = 0;
+    }
+
+    function closeResult() {
+        document.getElementById('resultScreen').classList.remove('active');
+        document.getElementById('chatInputWrap').classList.remove('active');
+        // 카테고리 선택 초기화
+        selectedCategory = null;
+        document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('selected'));
+        // step1으로 돌아가기
+        document.getElementById('step2').classList.remove('active');
+        document.getElementById('step1').classList.add('active');
+        document.getElementById('dot2').classList.remove('active');
+        document.getElementById('dot1').classList.add('active');
+        document.getElementById('cardTitle').innerText = '어떤 운세를 보시겠소?';
+        clearForm();
+    }
+
+    function openPayModal() { document.getElementById('payModal').classList.add('active'); }
+
+    function requestPay() {
+        if (!selectedCategory) { alert("카테고리를 선택해주시오!"); return; }
+        if (!window.IMP) { alert("결제 모듈이 로드되지 않았소. 새로고침 후 다시 시도하시오."); return; }
+        const cat = CAT_INFO[selectedCategory];
+        document.getElementById('payModal').classList.remove('active');
+        try {
+            window.IMP.request_pay({
+                pg: "kakaopay.TC0ONETIME",
+                pay_method: "card",
+                amount: 9900,
+                name: "유도령 종합 사주 분석",
+                merchant_uid: "yudoryung_" + new Date().getTime(),
+                buyer_name: document.getElementById('userName').value || "손님"
+            }, rsp => {
+                if (rsp.success) {
+                    payAndOpen();
+                } else {
+                    const msg = rsp.error_msg || "알 수 없는 오류";
+                    if (msg.includes("사용자가 결제를 취소") || msg.includes("cancel")) {
+                        // 취소는 조용히 처리
+                        document.getElementById('payModal').classList.add('active');
+                    } else {
+                        alert("결제 오류: " + msg);
+                        document.getElementById('payModal').classList.add('active');
+                    }
+                }
+            });
+        } catch(e) {
+            alert("결제 모듈 오류: " + e.message);
+        }
+    }
+
+    function payAndOpen() {
+        document.getElementById('payModal').classList.remove('active');
+        startLoading("유도령이 천기를 살피는 중이오...");
+
+        fetch('/pay_analyze', {
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({ ...getUserData(), session_salt: Date.now().toString() })
+        })
+        .then(r=>r.json())
+        .then(data => {
+            stopLoading();
+            if (data.error) { alert(data.error); return; }
+
+            currentSessionId = data.session_id;
+
+            // 상세 분석 표시
+            document.getElementById('teaseSection').style.display = 'none';
+            const ds = document.getElementById('detailSection');
+            ds.classList.add('active');
+            document.getElementById('detailText').innerText = data.detail || '';
+
+            // 채팅 섹션 열기
+            const cs = document.getElementById('chatSection');
+            cs.classList.add('active');
+            document.getElementById('remainingCount').innerText = data.remaining;
+            document.getElementById('chatMessages').innerHTML = '';
+            document.getElementById('chatDone').style.display = 'none';
+
+            // 유도령 첫 인사
+            appendYudoMsg(data.greeting);
+
+            // 입력창 열기
+            document.getElementById('chatInputWrap').classList.add('active');
+            ds.scrollIntoView({ behavior:'smooth' });
+        })
+        .catch(() => { stopLoading(); alert("유도령과의 연결이 고르지 못하오."); });
+    }
+
+    function appendYudoMsg(text) {
+        const wrap = document.getElementById('chatMessages');
+        const div = document.createElement('div');
+        div.className = 'msg-yudo';
+        div.innerHTML = `
+            <div class="msg-yudo-avatar">🔮</div>
+            <div class="msg-yudo-bubble">${text.replace(/\n/g,'<br>')}</div>
+        `;
+        wrap.appendChild(div);
+        div.scrollIntoView({ behavior:'smooth', block:'end' });
+    }
+
+    function appendUserMsg(text) {
+        const wrap = document.getElementById('chatMessages');
+        const div = document.createElement('div');
+        div.className = 'msg-user';
+        div.innerHTML = `<div class="msg-user-bubble">${text.replace(/\n/g,'<br>')}</div>`;
+        wrap.appendChild(div);
+        div.scrollIntoView({ behavior:'smooth', block:'end' });
+    }
+
+    function showTyping() {
+        document.getElementById('typingIndicator').classList.add('active');
+        document.getElementById('typingIndicator').scrollIntoView({ behavior:'smooth', block:'end' });
+    }
+
+    function hideTyping() {
+        document.getElementById('typingIndicator').classList.remove('active');
+    }
+
+    function sendChat() {
+        const input = document.getElementById('chatInput');
+        const q = input.value.trim();
+        if (!q || !currentSessionId) return;
+
+        const btn = document.getElementById('chatSendBtn');
+        btn.disabled = true;
+        input.value = '';
+        input.style.height = 'auto';
+
+        appendUserMsg(q);
+        showTyping();
+
+        fetch('/chat', {
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({ session_id: currentSessionId, question: q })
+        })
+        .then(r=>r.json())
+        .then(data => {
+            hideTyping();
+            btn.disabled = false;
+
+            if (data.error && data.done) {
+                document.getElementById('chatInputWrap').classList.remove('active');
+                document.getElementById('chatDone').style.display = 'block';
+                return;
+            }
+            if (data.error) { alert(data.error); return; }
+
+            appendYudoMsg(data.answer);
+            document.getElementById('remainingCount').innerText = data.remaining;
+
+            if (data.done) {
+                document.getElementById('chatInputWrap').classList.remove('active');
+                document.getElementById('chatDone').style.display = 'block';
+            }
+        })
+        .catch(() => { hideTyping(); btn.disabled = false; alert("연결이 끊겼소. 다시 시도하시오."); });
+    }
+
+
+    // 카카오 SDK 초기화
+    function initKakao() {
+        if (window.Kakao && !window.Kakao.isInitialized()) {
+            window.Kakao.init('발급받은_JS_KEY_입력');
+        } else if (!window.Kakao) {
+            setTimeout(initKakao, 300);
+        }
+    }
+    document.addEventListener('DOMContentLoaded', initKakao);
+
+    function getShareDesc() {
+        const name = document.getElementById('userName')?.value?.trim() || '나';
+        const cat = selectedCategory ? (CAT_INFO[selectedCategory]?.name || '운세') : '운세';
+        return `${name}님의 사주팔자 ${cat} 결과를 확인해보세요`;
+    }
+
+    function shareKakao() {
+        if (!window.Kakao || !window.Kakao.isInitialized()) {
+            // SDK 미초기화 시 링크 복사로 폴백
+            copyLink();
+            return;
+        }
+        const name = document.getElementById('userName')?.value?.trim() || '나';
+        const cat = selectedCategory ? (CAT_INFO[selectedCategory]?.name || '운세') : '운세';
+        Kakao.Share.sendDefault({
+            objectType: 'feed',
+            content: {
+                title: `${name}님의 사주팔자 ${cat}`,
+                description: '유도령의 천기직언에서 나의 운명을 확인해보세요',
+                imageUrl: window.location.origin + '/static/yudo.png',
+                link: { mobileWebUrl: window.location.href, webUrl: window.location.href }
+            },
+            buttons: [{
+                title: '나도 보러가기',
+                link: { mobileWebUrl: window.location.href, webUrl: window.location.href }
+            }]
+        });
+    }
+
+    function copyLink() {
+        const url = window.location.href;
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(url).then(showToast);
+        } else {
+            const el = document.createElement('textarea');
+            el.value = url;
+            document.body.appendChild(el);
+            el.select();
+            document.execCommand('copy');
+            document.body.removeChild(el);
+            showToast();
+        }
+    }
+
+    function showToast(msg) {
+        const t = document.getElementById('shareToast');
+        t.textContent = msg || '링크가 복사되었습니다 ✦';
+        t.classList.add('show');
+        setTimeout(() => t.classList.remove('show'), 2500);
+    }
+
+
+    const YUDO_QUOTES = [
+        { q: "나쁜 사주란 없소.\n때를 모르고 사는 것이 문제일 뿐이오.", s: "✦ 유도령 어록 ✦" },
+        { q: "인연은 억지로 잡는 것이 아니오.\n때가 되면 스스로 찾아오는 법이니라.", s: "✦ 연애운 중에서 ✦" },
+        { q: "돈은 모으는 것이 아니라\n흘러오게 만드는 것이오.", s: "✦ 금전운 중에서 ✦" },
+        { q: "사주는 운명을 알려주는 것이 아니오.\n어떻게 살아야 할지를 알려주는 것이니라.", s: "✦ 유도령 어록 ✦" },
+        { q: "올해의 고난은\n내년의 꽃을 피우기 위한 거름이오.", s: "✦ 운세 풀이 중에서 ✦" },
+        { q: "병오년의 불길은\n막는 자를 태우고 올라타는 자를 빛나게 하오.", s: "✦ 2026 병오년 ✦" },
+        { q: "그대가 흔들리는 것은\n더 깊이 뿌리내리기 위함이니라.", s: "✦ 유도령 어록 ✦" },
+        { q: "재물은 용신(用神)을 따라 흐르오.\n그대의 용신을 알면 길이 보이리라.", s: "✦ 금전운 중에서 ✦" },
+        { q: "그대의 사주가 어떻든\n쓰임을 알면 귀한 그릇이 되는 법이오.", s: "✦ 유도령 어록 ✦" },
+        { q: "만남도 이별도\n모두 그대가 배워야 할 것을 가르쳐주러 온 것이오.", s: "✦ 연애운 중에서 ✦" },
+        { q: "서두르지 마시오.\n때가 맞지 않으면 아무리 좋은 씨앗도 썩을 뿐이오.", s: "✦ 유도령 어록 ✦" },
+        { q: "비교하지 마시오.\n그대의 사주는 오직 그대만의 것이오.", s: "✦ 유도령 어록 ✦" },
+    ];
+    let quoteIdx = Math.floor(Math.random() * YUDO_QUOTES.length);
+
+    function showQuote(idx, animate) {
+        const el = document.getElementById('yudoQuote');
+        const sub = document.getElementById('yudoQuoteSub');
+        if (!el) return;
+        if (animate) {
+            el.style.opacity = '0'; sub.style.opacity = '0';
+            setTimeout(() => {
+                el.innerText = YUDO_QUOTES[idx].q;
+                sub.innerText = YUDO_QUOTES[idx].s;
+                el.style.opacity = '1'; sub.style.opacity = '1';
+            }, 300);
+        } else {
+            el.innerText = YUDO_QUOTES[idx].q;
+            sub.innerText = YUDO_QUOTES[idx].s;
+        }
+    }
+
+    function nextQuote() {
+        quoteIdx = (quoteIdx + 1) % YUDO_QUOTES.length;
+        showQuote(quoteIdx, true);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => showQuote(quoteIdx, false));
+
+    function toggleFaq(el) {
+        const item = el.parentElement;
+        const isOpen = item.classList.contains('open');
+        document.querySelectorAll('.faq-item').forEach(i => {
+            i.classList.remove('open');
+            i.querySelector('.faq-a').style.maxHeight = '0';
+        });
+        if (!isOpen) {
+            item.classList.add('open');
+            item.querySelector('.faq-a').style.maxHeight = item.querySelector('.faq-a-inner').scrollHeight + 'px';
+        }
+    }
+</script>
+<div class="share-toast" id="shareToast">링크가 복사되었습니다 ✦</div>
+</body>
+</html>
