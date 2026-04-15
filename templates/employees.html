@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>직원 관리</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Malgun Gothic', '맑은 고딕', sans-serif;
+            background: #0f0f1a;
+            color: #e8e0d5;
+            min-height: 100vh;
+            padding: 24px 16px;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 1.8rem;
+            color: #d4a96a;
+            margin-bottom: 28px;
+            letter-spacing: 2px;
+        }
+
+        .container { max-width: 900px; margin: 0 auto; }
+
+        /* 폼 카드 */
+        .card {
+            background: #1a1a2e;
+            border: 1px solid #2e2e4e;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 28px;
+        }
+
+        .card h2 {
+            font-size: 1.1rem;
+            color: #d4a96a;
+            margin-bottom: 18px;
+            border-bottom: 1px solid #2e2e4e;
+            padding-bottom: 10px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+        }
+
+        .form-group { display: flex; flex-direction: column; gap: 6px; }
+        .form-group label { font-size: 0.85rem; color: #9e8c7a; }
+
+        .form-group input {
+            background: #0f0f1a;
+            border: 1px solid #3a3a5a;
+            border-radius: 8px;
+            padding: 10px 12px;
+            color: #e8e0d5;
+            font-size: 0.95rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .form-group input:focus { border-color: #d4a96a; }
+
+        .btn-row {
+            margin-top: 18px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 10px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-family: inherit;
+            transition: opacity 0.2s;
+        }
+
+        .btn:hover { opacity: 0.85; }
+        .btn-primary { background: #d4a96a; color: #0f0f1a; font-weight: bold; }
+        .btn-secondary { background: #3a3a5a; color: #e8e0d5; }
+
+        /* 검색 */
+        .search-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .search-bar input {
+            flex: 1;
+            background: #1a1a2e;
+            border: 1px solid #3a3a5a;
+            border-radius: 8px;
+            padding: 10px 14px;
+            color: #e8e0d5;
+            font-size: 0.95rem;
+            outline: none;
+        }
+
+        .search-bar input:focus { border-color: #d4a96a; }
+
+        /* 직원 목록 */
+        .table-wrap { overflow-x: auto; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        thead th {
+            background: #16162a;
+            color: #d4a96a;
+            padding: 12px 14px;
+            text-align: left;
+            border-bottom: 1px solid #2e2e4e;
+            white-space: nowrap;
+        }
+
+        tbody tr { border-bottom: 1px solid #1e1e34; transition: background 0.15s; }
+        tbody tr:hover { background: #1f1f35; }
+        tbody td { padding: 12px 14px; vertical-align: middle; }
+
+        .badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            background: #2e2e4e;
+            color: #d4a96a;
+        }
+
+        .action-btns { display: flex; gap: 8px; }
+
+        .btn-edit {
+            padding: 5px 14px;
+            background: #2e3e5e;
+            color: #8ab4f8;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.82rem;
+        }
+
+        .btn-delete {
+            padding: 5px 14px;
+            background: #3e1e2e;
+            color: #f28b82;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.82rem;
+        }
+
+        .btn-edit:hover { background: #3a4e6e; }
+        .btn-delete:hover { background: #5e2e3e; }
+
+        .empty-msg {
+            text-align: center;
+            color: #5a5a7a;
+            padding: 40px;
+            font-size: 0.95rem;
+        }
+
+        /* 토스트 */
+        #toast {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(60px);
+            background: #d4a96a;
+            color: #0f0f1a;
+            padding: 12px 28px;
+            border-radius: 24px;
+            font-weight: bold;
+            font-size: 0.9rem;
+            opacity: 0;
+            transition: opacity 0.3s, transform 0.3s;
+            z-index: 999;
+        }
+
+        #toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* 모달 */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.7);
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.open { display: flex; }
+
+        .modal {
+            background: #1a1a2e;
+            border: 1px solid #3a3a5a;
+            border-radius: 14px;
+            padding: 28px;
+            width: 90%;
+            max-width: 500px;
+        }
+
+        .modal h2 {
+            color: #d4a96a;
+            margin-bottom: 20px;
+            font-size: 1.1rem;
+        }
+
+        @media (max-width: 600px) {
+            .form-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>직원 관리</h1>
+
+    <!-- 직원 등록 폼 -->
+    <div class="card">
+        <h2>직원 등록</h2>
+        <div class="form-grid">
+            <div class="form-group">
+                <label>이름 <span style="color:#c0392b">*</span></label>
+                <input type="text" id="name" placeholder="홍길동">
+            </div>
+            <div class="form-group">
+                <label>부서 <span style="color:#c0392b">*</span></label>
+                <input type="text" id="dept" placeholder="개발팀">
+            </div>
+            <div class="form-group">
+                <label>직급 <span style="color:#c0392b">*</span></label>
+                <input type="text" id="position" placeholder="사원">
+            </div>
+            <div class="form-group">
+                <label>입사일 <span style="color:#c0392b">*</span></label>
+                <input type="date" id="hire_date">
+            </div>
+            <div class="form-group">
+                <label>연락처</label>
+                <input type="text" id="phone" placeholder="010-0000-0000">
+            </div>
+            <div class="form-group">
+                <label>이메일</label>
+                <input type="email" id="email" placeholder="hong@example.com">
+            </div>
+        </div>
+        <div class="btn-row">
+            <button class="btn btn-primary" onclick="submitEmployee()">등록</button>
+            <button class="btn btn-secondary" onclick="resetForm()">초기화</button>
+        </div>
+    </div>
+
+    <!-- 직원 목록 -->
+    <div class="card">
+        <h2>직원 목록</h2>
+        <div class="search-bar">
+            <input type="text" id="searchInput" placeholder="이름, 부서, 직급으로 검색..." oninput="filterTable()">
+        </div>
+        <div class="table-wrap">
+            <table id="empTable">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>이름</th>
+                        <th>부서</th>
+                        <th>직급</th>
+                        <th>입사일</th>
+                        <th>연락처</th>
+                        <th>이메일</th>
+                        <th>관리</th>
+                    </tr>
+                </thead>
+                <tbody id="empBody">
+                    <tr><td colspan="8" class="empty-msg">불러오는 중...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- 수정 모달 -->
+<div class="modal-overlay" id="editModal">
+    <div class="modal">
+        <h2>직원 정보 수정</h2>
+        <input type="hidden" id="editId">
+        <div class="form-grid">
+            <div class="form-group">
+                <label>이름</label>
+                <input type="text" id="editName">
+            </div>
+            <div class="form-group">
+                <label>부서</label>
+                <input type="text" id="editDept">
+            </div>
+            <div class="form-group">
+                <label>직급</label>
+                <input type="text" id="editPosition">
+            </div>
+            <div class="form-group">
+                <label>입사일</label>
+                <input type="date" id="editHireDate">
+            </div>
+            <div class="form-group">
+                <label>연락처</label>
+                <input type="text" id="editPhone">
+            </div>
+            <div class="form-group">
+                <label>이메일</label>
+                <input type="email" id="editEmail">
+            </div>
+        </div>
+        <div class="btn-row" style="margin-top:20px">
+            <button class="btn btn-primary" onclick="saveEdit()">저장</button>
+            <button class="btn btn-secondary" onclick="closeModal()">취소</button>
+        </div>
+    </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+    let allEmployees = [];
+
+    async function loadEmployees() {
+        const res = await fetch('/api/employees');
+        allEmployees = await res.json();
+        renderTable(allEmployees);
+    }
+
+    function renderTable(list) {
+        const tbody = document.getElementById('empBody');
+        if (!list.length) {
+            tbody.innerHTML = '<tr><td colspan="8" class="empty-msg">등록된 직원이 없습니다.</td></tr>';
+            return;
+        }
+        tbody.innerHTML = list.map(e => `
+            <tr>
+                <td>${e.id}</td>
+                <td><strong>${e.name}</strong></td>
+                <td><span class="badge">${e.dept}</span></td>
+                <td>${e.position}</td>
+                <td>${e.hire_date}</td>
+                <td>${e.phone || '-'}</td>
+                <td>${e.email || '-'}</td>
+                <td>
+                    <div class="action-btns">
+                        <button class="btn-edit" onclick="openEdit(${e.id})">수정</button>
+                        <button class="btn-delete" onclick="deleteEmployee(${e.id}, '${e.name}')">삭제</button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    function filterTable() {
+        const q = document.getElementById('searchInput').value.trim().toLowerCase();
+        if (!q) { renderTable(allEmployees); return; }
+        const filtered = allEmployees.filter(e =>
+            e.name.toLowerCase().includes(q) ||
+            e.dept.toLowerCase().includes(q) ||
+            e.position.toLowerCase().includes(q)
+        );
+        renderTable(filtered);
+    }
+
+    async function submitEmployee() {
+        const body = {
+            name:      document.getElementById('name').value,
+            dept:      document.getElementById('dept').value,
+            position:  document.getElementById('position').value,
+            hire_date: document.getElementById('hire_date').value,
+            phone:     document.getElementById('phone').value,
+            email:     document.getElementById('email').value,
+        };
+        const res = await fetch('/api/employees', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        });
+        const data = await res.json();
+        if (!res.ok) { showToast(data.error || '오류 발생'); return; }
+        showToast(`${data.name} 직원이 등록되었습니다.`);
+        resetForm();
+        loadEmployees();
+    }
+
+    function resetForm() {
+        ['name','dept','position','hire_date','phone','email'].forEach(id => {
+            document.getElementById(id).value = '';
+        });
+    }
+
+    function openEdit(id) {
+        const e = allEmployees.find(x => x.id === id);
+        if (!e) return;
+        document.getElementById('editId').value       = e.id;
+        document.getElementById('editName').value     = e.name;
+        document.getElementById('editDept').value     = e.dept;
+        document.getElementById('editPosition').value = e.position;
+        document.getElementById('editHireDate').value = e.hire_date;
+        document.getElementById('editPhone').value    = e.phone || '';
+        document.getElementById('editEmail').value    = e.email || '';
+        document.getElementById('editModal').classList.add('open');
+    }
+
+    function closeModal() {
+        document.getElementById('editModal').classList.remove('open');
+    }
+
+    async function saveEdit() {
+        const id = document.getElementById('editId').value;
+        const body = {
+            name:      document.getElementById('editName').value,
+            dept:      document.getElementById('editDept').value,
+            position:  document.getElementById('editPosition').value,
+            hire_date: document.getElementById('editHireDate').value,
+            phone:     document.getElementById('editPhone').value,
+            email:     document.getElementById('editEmail').value,
+        };
+        const res = await fetch(`/api/employees/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        });
+        const data = await res.json();
+        if (!res.ok) { showToast(data.error || '오류 발생'); return; }
+        showToast(`${data.name} 정보가 수정되었습니다.`);
+        closeModal();
+        loadEmployees();
+    }
+
+    async function deleteEmployee(id, name) {
+        if (!confirm(`${name} 직원을 삭제하시겠습니까?`)) return;
+        await fetch(`/api/employees/${id}`, { method: 'DELETE' });
+        showToast(`${name} 직원이 삭제되었습니다.`);
+        loadEmployees();
+    }
+
+    function showToast(msg) {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.classList.add('show');
+        setTimeout(() => t.classList.remove('show'), 2500);
+    }
+
+    // 모달 외부 클릭 시 닫기
+    document.getElementById('editModal').addEventListener('click', function(e) {
+        if (e.target === this) closeModal();
+    });
+
+    loadEmployees();
+</script>
+</body>
+</html>

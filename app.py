@@ -1,3 +1,282 @@
+import requests
+import traceback
+import os
+import hashlib
+import re
+import sqlite3
+from datetime import date
+from flask import Flask, render_template, request, jsonify
+from dotenv import load_dotenv
+
+load_dotenv()
+
+app = Flask(__name__)
+API_KEY = os.environ.get("GEMINI_API_KEY")
+
+# ─── 직원 관리 DB ─────────────────────────────────────────────────
+DB_PATH = os.path.join(os.path.dirname(__file__), 'employees.db')
+
+def get_db():
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+def init_db():
+    with get_db() as conn:
+        conn.execute('''
+            CREATE TABLE IF NOT EXISTS employees (
+                id         INTEGER PRIMARY KEY AUTOINCREMENT,
+                name       TEXT    NOT NULL,
+                dept       TEXT    NOT NULL,
+                position   TEXT    NOT NULL,
+                hire_date  TEXT    NOT NULL,
+                phone      TEXT,
+                email      TEXT,
+                created_at TEXT DEFAULT (datetime('now','localtime'))
+            )
+        ''')
+        conn.commit()
+
+init_db()
+
+# ─── 만세력 상수 ──────────────────────────────────────────────────
+CHEONGAN  = ['갑','을','병','정','무','기','경','신','임','계']
+JIJI      = ['자','축','인','묘','진','사','오','미','신','유','술','해']
+CG_HANJA  = ['甲','乙','丙','丁','戊','己','庚','辛','壬','癸']
+JJ_HANJA  = ['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥']
+OHENG_CG  = ['목','목','화','화','토','토','금','금','수','수']
+OHENG_JJ  = ['수','토','목','목','토','화','화','토','금','금','토','수']
+
+OHENG_COLOR  = {'목':'#7acc50','화':'#ff6640','토':'#ddaa20','금':'#99aaee','수':'#44aaee'}
+OHENG_BG     = {'목':'rgba(60,120,20,0.25)','화':'rgba(150,30,5,0.25)',
+                '토':'rgba(120,80,0,0.25)', '금':'rgba(40,40,120,0.25)','수':'rgba(5,40,100,0.25)'}
+OHENG_BORDER = {'목':'rgba(80,160,40,0.4)','화':'rgba(200,60,20,0.4)',
+                '토':'rgba(180,140,0,0.4)','금':'rgba(100,120,200,0.4)','수':'rgba(20,100,180,0.4)'}
+
+
+# ─── 만세력 계산 함수 ─────────────────────────────────────────────
+def get_month_jiji(month, day):
+    """절기 기준 월지지 - 올바른 계산
+    1월=축(1), 2월=인(2), 3월=묘(3), 4월=진(4), 5월=사(5), 6월=오(6)
+    7월=미(7), 8월=신(8), 9월=유(9), 10월=술(10), 11월=해(11), 12월=자(0)
+    """
+    starts = [6, 4, 6, 5, 6, 6, 7, 8, 8, 8, 7, 7]
+    if day >= starts[month - 1]:
+        m = month
+    else:
+        m = month - 1 if month > 1 else 12
+    return m % 12  # 12월→0(자), 1~11월→그대로
+
+def calc_saju(year, month, day, hour=None, ampm=None):
+    """실제 만세력으로 사주팔자 계산. (saju_flat, saju_str) 반환"""
+    import datetime
+
+    # ── 시간 → 24시간제 변환 ──
+    h24 = None
+    if hour is not None:
+        h24 = hour
+        if ampm == '오후' and hour != 12:
+            h24 = hour + 12
+        elif ampm == '오전' and hour == 12:
+            h24 = 0
+
+    # ── 년주 계산 ──
+    # 입춘(2월 4일) 기준으로 연주 결정
+    if (month == 1) or (month == 2 and day < 4):
+        year_gan_idx = (year - 1 - 4) % 10
+        year_ji_idx  = (year - 1 - 4) % 12
+    else:
+        year_gan_idx = (year - 4) % 10
+        year_ji_idx  = (year - 4) % 12
+
+    # ── 월주 계산 ──
+    month_ji_idx = get_month_jiji(month, day)
+    # 월간: 년간 기준 오행 순환
+    month_gan_idx = ((year_gan_idx % 5) * 2 + month_ji_idx) % 10
+
+    # ── 일주 계산 ── (기준: 2000-01-07 갑자일 = 간지 0)
+    base_date = datetime.date(2000, 1, 7)
+    target_date = datetime.date(year, month, day)
+    diff = (target_date - base_date).days
+    day_gan_idx = diff % 10
+    day_ji_idx  = diff % 12
+
+    # ── 시주 계산 ──
+    if h24 is None:
+        shi_gan_idx = None
+        shi_ji_idx  = None
+    else:
+        # 시지: 자시(23~1)=0, 축시(1~3)=1, ...
+        shi_ji_idx = ((h24 + 1) // 2) % 12
+        shi_gan_idx = ((day_gan_idx % 5) * 2 + shi_ji_idx) % 10
+
+    def make_cell(gan_idx, ji_idx):
+        if gan_idx is None:
+            return None
+        cg = CHEONGAN[gan_idx]; cg_h = CG_HANJA[gan_idx]; cg_o = OHENG_CG[gan_idx]
+        jj = JIJI[ji_idx];     jj_h = JJ_HANJA[ji_idx];  jj_o = OHENG_JJ[ji_idx]
+        return {
+            'gan': {'hanja': cg_h, 'hangul': cg, 'oheng': cg_o,
+                    'color': OHENG_COLOR[cg_o], 'bg': OHENG_BG[cg_o], 'border': OHENG_BORDER[cg_o]},
+            'ji':  {'hanja': jj_h, 'hangul': jj, 'oheng': jj_o,
+                    'color': OHENG_COLOR[jj_o], 'bg': OHENG_BG[jj_o], 'border': OHENG_BORDER[jj_o]},
+        }
+
+    year_cell  = make_cell(year_gan_idx,  year_ji_idx)
+    month_cell = make_cell(month_gan_idx, month_ji_idx)
+    day_cell   = make_cell(day_gan_idx,   day_ji_idx)
+    shi_cell   = make_cell(shi_gan_idx,   shi_ji_idx)
+
+    # flat 딕셔너리 (기존 코드 호환)
+    def flat_cell(cell, prefix):
+        if not cell: return {f'{prefix}천간': None, f'{prefix}지지': None}
+        return {
+            f'{prefix}천간': {'hanja': cell['gan']['hanja'], 'hangul': cell['gan']['hangul'],
+                               'oheng': cell['gan']['oheng'], 'color': cell['gan']['color'],
+                               'bg': cell['gan']['bg'], 'border': cell['gan']['border']},
+            f'{prefix}지지': {'hanja': cell['ji']['hanja'],  'hangul': cell['ji']['hangul'],
+                               'oheng': cell['ji']['oheng'],  'color': cell['ji']['color'],
+                               'bg': cell['ji']['bg'],  'border': cell['ji']['border']},
+        }
+
+    saju_flat = {}
+    saju_flat.update(flat_cell(shi_cell,  '시주'))
+    saju_flat.update(flat_cell(day_cell,  '일주'))
+    saju_flat.update(flat_cell(month_cell,'월주'))
+    saju_flat.update(flat_cell(year_cell, '년주'))
+
+    # 오행 강약 계산
+    oheng_count = {'목':0,'화':0,'토':0,'금':0,'수':0}
+    for key, val in saju_flat.items():
+        if val and 'oheng' in val:
+            oheng_count[val['oheng']] = oheng_count.get(val['oheng'], 0) + 1
+    sorted_oh = sorted(oheng_count.items(), key=lambda x: -x[1])
+    strong = [o for o,c in sorted_oh if c == sorted_oh[0][1]]
+    weak   = [o for o,c in sorted_oh if c == sorted_oh[-1][1]]
+    saju_flat['강한기운'] = '·'.join(strong)
+    saju_flat['약한기운'] = '·'.join(weak)
+
+    # 문자열 표현
+    def cell_str(cell):
+        if not cell: return '時不明'
+        return f"{cell['gan']['hangul']}{cell['ji']['hangul']}({cell['gan']['hanja']}{cell['ji']['hanja']})"
+
+    saju_str = f"년주:{cell_str(year_cell)} 월주:{cell_str(month_cell)} 일주:{cell_str(day_cell)} 시주:{cell_str(shi_cell)}"
+
+    return saju_flat, saju_str
+
+
+# ─── 음력→양력 변환 ────────────────────────────────────────────────────
+
+def lunar_to_solar(year, month, day, is_leap=False):
+    """음력 날짜를 양력으로 변환."""
+    try:
+        from korean_lunar_calendar import KoreanLunarCalendar
+        cal = KoreanLunarCalendar()
+        cal.setLunarDate(year, month, day, is_leap)
+        solar = cal.SolarIsoFormat()
+        parts = solar.split("-")
+        return int(parts[0]), int(parts[1]), int(parts[2])
+    except Exception:
+        pass
+    import datetime
+    offsets = [0, 20, 20, 20, 21, 21, 22, 23, 24, 24, 25, 25, 26]
+    offset = offsets[month] if 1 <= month <= 12 else 20
+    try:
+        lunar_date = datetime.date(year, month, day)
+        solar_date = lunar_date + datetime.timedelta(days=offset)
+        return solar_date.year, solar_date.month, solar_date.day
+    except:
+        return year, month, day
+
+
+# ─── 실제 만세력 계산 ────────────────────────────────────────────
+CHEONGAN  = ['갑','을','병','정','무','기','경','신','임','계']
+JIJI      = ['자','축','인','묘','진','사','오','미','신','유','술','해']
+CG_HANJA  = ['甲','乙','丙','丁','戊','己','庚','辛','壬','癸']
+JJ_HANJA  = ['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥']
+OHENG_CG  = ['목','목','화','화','토','토','금','금','수','수']
+OHENG_JJ  = ['수','토','목','목','토','화','화','토','금','금','토','수']
+
+OHENG_COLOR  = {'목':'#7acc50','화':'#ff6640','토':'#ddaa20','금':'#99aaee','수':'#44aaee'}
+OHENG_BG     = {'목':'rgba(60,120,20,0.25)','화':'rgba(150,30,5,0.25)',
+                '토':'rgba(120,80,0,0.25)', '금':'rgba(40,40,120,0.25)','수':'rgba(5,40,100,0.25)'}
+OHENG_BORDER = {'목':'rgba(80,160,40,0.4)','화':'rgba(200,60,20,0.4)',
+                '토':'rgba(180,140,0,0.4)','금':'rgba(100,120,200,0.4)','수':'rgba(20,100,180,0.4)'}
+
+
+# ─── 헬퍼 함수 ────────────────────────────────────────────────────
+def make_base_key(gender, birth, time):
+    return hashlib.md5(f"{gender}|{birth}|{time}".encode()).hexdigest()
+
+def make_detail_key(gender, birth, time):
+    return hashlib.md5(f"{gender}|{birth}|{time}|full".encode()).hexdigest()
+
+def call_gemini(prompt, temperature=0.3):
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={API_KEY}"
+    payload = {
+        "contents": [{"parts": [{"text": prompt}]}],
+        "generationConfig": {"temperature": temperature, "topP": 0.9, "topK": 40}
+    }
+    response = requests.post(url, json=payload, timeout=90)
+    res = response.json()
+    if 'candidates' not in res:
+        raise Exception(res.get('error', {}).get('message', '오류'))
+    text = res['candidates'][0]['content']['parts'][0]['text']
+    # 마크다운 기호 강제 제거
+    import re as _re
+    text = _re.sub(r'\*{1,3}([^*]+)\*{1,3}', r'\1', text)  # **굵게**, *기울임*
+    text = _re.sub(r'_{1,2}([^_]+)_{1,2}', r'\1', text)     # __밑줄__
+    text = _re.sub(r'^#{1,6}\s+', '', text, flags=_re.MULTILINE)  # ## 헤더
+    text = _re.sub(r'^[-*+]\s+', '', text, flags=_re.MULTILINE)   # - 목록
+    text = _re.sub(r'^\d+\.\s+', '', text, flags=_re.MULTILINE)   # 1. 목록
+    text = _re.sub(r'`([^`]+)`', r'\1', text)                     # `코드`
+    text = _re.sub(r'-{3,}|={3,}', '', text)                      # 구분선
+    return text.strip()
+
+def attach_nim(text, names):
+    """이름 단독 호칭 → 이름님 으로 강제 교체"""
+    import re as _re
+    for name in names:
+        if not name:
+            continue
+        # 이름 뒤에 님이 없는 경우만 교체 (이름님은 그대로)
+        text = _re.sub(r'(?<!' + '님)' + _re.escape(name) + r'(?!님)(?=[은는이가을를의도와과]|\s|$)', name + '님', text)
+    return text
+
+def trim_preview(text, max_chars=120):
+    """맛보기 텍스트 - 120자 내외 문장 끝에서 자르고 ... 붙임"""
+    text = text.strip()
+    if len(text) <= max_chars:
+        return text
+    cut = text[:max_chars]
+    for ending in ['하오', '이오', '이니라', '것이오', '하리라', '이라', '다.', '요.', '오.', '다', '요', '오']:
+        idx = cut.rfind(ending)
+        if idx > 30:
+            return cut[:idx + len(ending)] + '...'
+    sp = cut.rfind(' ')
+    if sp > 30:
+        return cut[:sp] + '...'
+    return cut + '...'
+
+def parse_birth_params(data):
+    """요청 데이터에서 birth, time 파싱. 음력이면 양력으로 변환."""
+    birth = data.get('birth', '')
+    time  = data.get('time', '모름')
+    lunar = data.get('lunar', False)
+    leap  = data.get('leap', False)
+
+    if birth and lunar:
+        try:
+            y, m, d = [int(x) for x in birth.split('-')]
+            sy, sm, sd = lunar_to_solar(y, m, d, leap)
+            birth = f"{sy}-{sm:02d}-{sd:02d}"
+        except:
+            pass
+    return birth, time
+
+
+# ─── 프롬프트 ─────────────────────────────────────────────────────
 FULL_ANALYSIS_PROMPT = """
 당신은 수십 년 경력의 명리학자 유도령이오. 지금부터 의뢰인의 사주팔자 원국을 감정서 형식으로 풀어주시오.
 의뢰인을 부를 때는 반드시 이름 뒤에 님을 붙여 호칭하시오. 예) 홍길동님, 김영희님. 절대 이름만 단독으로 쓰지 마시오.
@@ -503,6 +782,67 @@ def sinnyeon_detail():
     except Exception as e:
         import traceback; traceback.print_exc()
         return jsonify({"error": str(e)}), 500
+
+
+# ─── 직원 관리 라우트 ─────────────────────────────────────────────
+@app.route('/employees')
+def employees_page():
+    return render_template('employees.html')
+
+@app.route('/api/employees', methods=['GET'])
+def list_employees():
+    with get_db() as conn:
+        rows = conn.execute('SELECT * FROM employees ORDER BY id DESC').fetchall()
+    return jsonify([dict(r) for r in rows])
+
+@app.route('/api/employees', methods=['POST'])
+def create_employee():
+    data = request.json
+    name      = data.get('name', '').strip()
+    dept      = data.get('dept', '').strip()
+    position  = data.get('position', '').strip()
+    hire_date = data.get('hire_date', '').strip()
+    phone     = data.get('phone', '').strip()
+    email     = data.get('email', '').strip()
+    if not name or not dept or not position or not hire_date:
+        return jsonify({'error': '이름, 부서, 직급, 입사일은 필수입니다.'}), 400
+    with get_db() as conn:
+        cur = conn.execute(
+            'INSERT INTO employees (name, dept, position, hire_date, phone, email) VALUES (?,?,?,?,?,?)',
+            (name, dept, position, hire_date, phone, email)
+        )
+        conn.commit()
+        row = conn.execute('SELECT * FROM employees WHERE id=?', (cur.lastrowid,)).fetchone()
+    return jsonify(dict(row)), 201
+
+@app.route('/api/employees/<int:emp_id>', methods=['PUT'])
+def update_employee(emp_id):
+    data = request.json
+    name      = data.get('name', '').strip()
+    dept      = data.get('dept', '').strip()
+    position  = data.get('position', '').strip()
+    hire_date = data.get('hire_date', '').strip()
+    phone     = data.get('phone', '').strip()
+    email     = data.get('email', '').strip()
+    if not name or not dept or not position or not hire_date:
+        return jsonify({'error': '이름, 부서, 직급, 입사일은 필수입니다.'}), 400
+    with get_db() as conn:
+        conn.execute(
+            'UPDATE employees SET name=?, dept=?, position=?, hire_date=?, phone=?, email=? WHERE id=?',
+            (name, dept, position, hire_date, phone, email, emp_id)
+        )
+        conn.commit()
+        row = conn.execute('SELECT * FROM employees WHERE id=?', (emp_id,)).fetchone()
+    if row is None:
+        return jsonify({'error': '직원을 찾을 수 없습니다.'}), 404
+    return jsonify(dict(row))
+
+@app.route('/api/employees/<int:emp_id>', methods=['DELETE'])
+def delete_employee(emp_id):
+    with get_db() as conn:
+        conn.execute('DELETE FROM employees WHERE id=?', (emp_id,))
+        conn.commit()
+    return jsonify({'ok': True})
 
 
 if __name__ == '__main__':
