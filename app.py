@@ -59,10 +59,13 @@ _JEOLGI_JIJI = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 0]
 
 _DAY60_BASE = _date(1900, 1, 31)  # 甲子日 기준점
 
-GEMINI_API_URL = (
-    "https://generativelanguage.googleapis.com/v1beta/models/"
-    "gemini-1.5-flash:generateContent"
-)
+_GEMINI_MODELS = [
+    "gemini-2.0-flash",
+    "gemini-1.5-flash",
+    "gemini-1.5-flash-latest",
+    "gemini-1.5-pro",
+]
+_GEMINI_BASE = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
 
 
 # ─── 유틸 함수 ────────────────────────────────────────────────────
@@ -162,11 +165,12 @@ def calc_saju(year, month, day, hour=None, ampm=None):
 
 
 def call_gemini(prompt, temperature=0.7):
-    """Gemini API 호출"""
+    """Gemini API 호출 — 503 시 모델 순차 폴백 + 재시도"""
+    import time as _time
     api_key = os.getenv('GEMINI_API_KEY', '')
     if not api_key:
         raise ValueError("GEMINI_API_KEY 환경변수가 없습니다.")
-    url = f"{GEMINI_API_URL}?key={api_key}"
+
     payload = {
         "contents": [{"parts": [{"text": prompt}]}],
         "generationConfig": {
@@ -174,10 +178,25 @@ def call_gemini(prompt, temperature=0.7):
             "maxOutputTokens": 8192,
         },
     }
-    resp = requests.post(url, json=payload, timeout=120)
-    resp.raise_for_status()
-    data = resp.json()
-    return data['candidates'][0]['content']['parts'][0]['text']
+
+    last_err = None
+    for model in _GEMINI_MODELS:
+        url = f"{_GEMINI_BASE.format(model=model)}?key={api_key}"
+        for attempt in range(3):          # 모델당 최대 3회 재시도
+            try:
+                resp = requests.post(url, json=payload, timeout=120)
+                if resp.status_code == 503:
+                    _time.sleep(2 ** attempt)
+                    last_err = resp.text
+                    continue
+                resp.raise_for_status()
+                data = resp.json()
+                return data['candidates'][0]['content']['parts'][0]['text']
+            except (requests.RequestException, KeyError) as e:
+                last_err = str(e)
+                _time.sleep(2 ** attempt)
+
+    raise RuntimeError(f"모든 Gemini 모델 호출 실패: {last_err}")
 
 
 def parse_birth_params(data):
