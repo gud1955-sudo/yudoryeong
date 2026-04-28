@@ -60,10 +60,10 @@ _JEOLGI_JIJI = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 0]
 _DAY60_BASE = _date(1900, 1, 31)  # 甲子日 기준점
 
 _GEMINI_MODELS = [
+    "gemini-2.5-flash",
     "gemini-2.0-flash",
-    "gemini-1.5-flash",
-    "gemini-1.5-flash-latest",
-    "gemini-1.5-pro",
+    "gemini-flash-latest",
+    "gemini-pro-latest",
 ]
 _GEMINI_BASE = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
 
