@@ -1,3 +1,226 @@
+import os
+import re
+import hashlib
+import traceback
+from datetime import date as _date
+
+from flask import Flask, request, jsonify, render_template
+import requests
+from dotenv import load_dotenv
+
+load_dotenv()
+app = Flask(__name__)
+
+# ─── 천간·지지 상수 ──────────────────────────────────────────────
+_CHEONGAN = [
+    {'hanja': '甲', 'hangul': '갑', 'oheng': '목'},
+    {'hanja': '乙', 'hangul': '을', 'oheng': '목'},
+    {'hanja': '丙', 'hangul': '병', 'oheng': '화'},
+    {'hanja': '丁', 'hangul': '정', 'oheng': '화'},
+    {'hanja': '戊', 'hangul': '무', 'oheng': '토'},
+    {'hanja': '己', 'hangul': '기', 'oheng': '토'},
+    {'hanja': '庚', 'hangul': '경', 'oheng': '금'},
+    {'hanja': '辛', 'hangul': '신', 'oheng': '금'},
+    {'hanja': '壬', 'hangul': '임', 'oheng': '수'},
+    {'hanja': '癸', 'hangul': '계', 'oheng': '수'},
+]
+
+_JIJI = [
+    {'hanja': '子', 'hangul': '자', 'oheng': '수'},
+    {'hanja': '丑', 'hangul': '축', 'oheng': '토'},
+    {'hanja': '寅', 'hangul': '인', 'oheng': '목'},
+    {'hanja': '卯', 'hangul': '묘', 'oheng': '목'},
+    {'hanja': '辰', 'hangul': '진', 'oheng': '토'},
+    {'hanja': '巳', 'hangul': '사', 'oheng': '화'},
+    {'hanja': '午', 'hangul': '오', 'oheng': '화'},
+    {'hanja': '未', 'hangul': '미', 'oheng': '토'},
+    {'hanja': '申', 'hangul': '신', 'oheng': '금'},
+    {'hanja': '酉', 'hangul': '유', 'oheng': '금'},
+    {'hanja': '戌', 'hangul': '술', 'oheng': '토'},
+    {'hanja': '亥', 'hangul': '해', 'oheng': '수'},
+]
+
+# 절기 근사 날짜 (월, 일) → 해당 월지지 시작일
+_JEOLGI_DATES = [
+    (1,  6),  # 소한 → 丑月(1)
+    (2,  4),  # 입춘 → 寅月(2)
+    (3,  6),  # 경칩 → 卯月(3)
+    (4,  5),  # 청명 → 辰月(4)
+    (5,  6),  # 입하 → 巳月(5)
+    (6,  6),  # 망종 → 午月(6)
+    (7,  7),  # 소서 → 未月(7)
+    (8,  7),  # 입추 → 申月(8)
+    (9,  8),  # 백로 → 酉月(9)
+    (10, 8),  # 한로 → 戌月(10)
+    (11, 7),  # 입동 → 亥月(11)
+    (12, 7),  # 대설 → 子月(0)
+]
+_JEOLGI_JIJI = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 0]
+
+_DAY60_BASE = _date(1900, 1, 31)  # 甲子日 기준점
+
+GEMINI_API_URL = (
+    "https://generativelanguage.googleapis.com/v1beta/models/"
+    "gemini-1.5-flash:generateContent"
+)
+
+
+# ─── 유틸 함수 ────────────────────────────────────────────────────
+
+def _get_month_branch(year, month, day):
+    """절기 근사 기반 월지지 인덱스 반환"""
+    for i in range(11, -1, -1):
+        m, d = _JEOLGI_DATES[i]
+        if month > m or (month == m and day >= d):
+            return _JEOLGI_JIJI[i]
+    return 0  # 1월 1~5일: 子月
+
+
+def lunar_to_solar(year, month, day, leap=False):
+    """음력 → 양력 변환"""
+    try:
+        from korean_lunar_calendar import KoreanLunarCalendar
+        cal = KoreanLunarCalendar()
+        cal.setLunarDate(year, month, day, bool(leap))
+        return cal.solarYear, cal.solarMonth, cal.solarDay
+    except Exception:
+        from datetime import timedelta
+        d = _date(year, month, min(day, 28)) + timedelta(days=30)
+        return d.year, d.month, d.day
+
+
+def calc_saju(year, month, day, hour=None, ampm=None):
+    """사주팔자 계산. hour=1~12, ampm='오전'|'오후'"""
+    # 24시간 변환
+    hour_24 = None
+    if hour is not None:
+        if ampm == '오후' and hour != 12:
+            hour_24 = hour + 12
+        elif ampm == '오전' and hour == 12:
+            hour_24 = 0
+        else:
+            hour_24 = hour
+
+    # 년주 (입춘 기준)
+    saju_year = year
+    if month < 2 or (month == 2 and day < 4):
+        saju_year = year - 1
+    year_idx     = (saju_year - 4) % 60
+    year_gan_idx = year_idx % 10
+    year_ji_idx  = year_idx % 12
+    year_gan = _CHEONGAN[year_gan_idx]
+    year_ji  = _JIJI[year_ji_idx]
+
+    # 월주 (절기 기준)
+    month_ji_idx = _get_month_branch(year, month, day)
+    month_num    = (month_ji_idx - 2) % 12          # 인월=0 기준
+    month_start  = [2, 4, 6, 8, 0, 2, 4, 6, 8, 0][year_gan_idx]
+    month_gan_idx = (month_start + month_num) % 10
+    month_gan = _CHEONGAN[month_gan_idx]
+    month_ji  = _JIJI[month_ji_idx]
+
+    # 일주
+    day_idx     = (_date(year, month, day) - _DAY60_BASE).days % 60
+    day_gan_idx = day_idx % 10
+    day_ji_idx  = day_idx % 12
+    day_gan = _CHEONGAN[day_gan_idx]
+    day_ji  = _JIJI[day_ji_idx]
+
+    # 시주
+    hour_gan = hour_ji = None
+    if hour_24 is not None:
+        hour_ji_idx  = (hour_24 + 1) // 2 % 12
+        hour_start   = [0, 2, 4, 6, 8][day_gan_idx % 5]
+        hour_gan_idx = (hour_start + hour_ji_idx) % 10
+        hour_gan = _CHEONGAN[hour_gan_idx]
+        hour_ji  = _JIJI[hour_ji_idx]
+
+    saju_flat = {
+        '년주천간': year_gan,
+        '년주지지': year_ji,
+        '월주천간': month_gan,
+        '월주지지': month_ji,
+        '일주천간': day_gan,
+        '일주지지': day_ji,
+    }
+    if hour_gan:
+        saju_flat['시주천간'] = hour_gan
+        saju_flat['시주지지'] = hour_ji
+
+    def fmt(g, j):
+        return f"{g['hanja']}{j['hanja']}({g['hangul']}{j['hangul']})"
+
+    parts = [
+        fmt(year_gan, year_ji),
+        fmt(month_gan, month_ji),
+        fmt(day_gan, day_ji),
+        fmt(hour_gan, hour_ji) if hour_gan else '시주미상',
+    ]
+    saju_str = ' / '.join(parts)
+
+    return saju_flat, saju_str
+
+
+def call_gemini(prompt, temperature=0.7):
+    """Gemini API 호출"""
+    api_key = os.getenv('GEMINI_API_KEY', '')
+    if not api_key:
+        raise ValueError("GEMINI_API_KEY 환경변수가 없습니다.")
+    url = f"{GEMINI_API_URL}?key={api_key}"
+    payload = {
+        "contents": [{"parts": [{"text": prompt}]}],
+        "generationConfig": {
+            "temperature": temperature,
+            "maxOutputTokens": 8192,
+        },
+    }
+    resp = requests.post(url, json=payload, timeout=120)
+    resp.raise_for_status()
+    data = resp.json()
+    return data['candidates'][0]['content']['parts'][0]['text']
+
+
+def parse_birth_params(data):
+    """요청 데이터에서 birth, time 파싱 (음력 변환 포함)"""
+    birth = data.get('birth', '')
+    time  = data.get('time', '모름')
+    lunar = data.get('lunar', False)
+    leap  = data.get('leap', False)
+    if birth and lunar:
+        try:
+            y, m, d = [int(x) for x in birth.split('-')]
+            sy, sm, sd = lunar_to_solar(y, m, d, leap)
+            birth = f"{sy}-{sm:02d}-{sd:02d}"
+        except Exception:
+            pass
+    return birth, time
+
+
+def make_base_key(gender, birth, time):
+    return hashlib.md5(f"{gender}|{birth}|{time}".encode()).hexdigest()
+
+
+def make_detail_key(gender, birth, time):
+    return hashlib.md5(f"detail|{gender}|{birth}|{time}".encode()).hexdigest()
+
+
+def attach_nim(text, names):
+    """이름 뒤에 '님' 자동 부착"""
+    for name in names:
+        if not name:
+            continue
+        text = re.sub(rf'{re.escape(name)}(?!님)', f'{name}님', text)
+    return text
+
+
+def trim_preview(text):
+    """맛보기 텍스트를 3문장 이내로 축약"""
+    text = text.strip()
+    sentences = re.split(r'(?<=[.。!?])\s+', text)
+    sentences = [s.strip() for s in sentences if s.strip()]
+    return ' '.join(sentences[:3])
+
+
 FULL_ANALYSIS_PROMPT = """
 당신은 수십 년 경력의 명리학자 유도령이오. 지금부터 의뢰인의 사주팔자 원국을 감정서 형식으로 풀어주시오.
 의뢰인을 부를 때는 반드시 이름 뒤에 님을 붙여 호칭하시오. 예) 홍길동님, 김영희님. 절대 이름만 단독으로 쓰지 마시오.
