@@ -193,6 +193,41 @@ body{font-family:var(--font-n);background:var(--bg);color:var(--white);min-heigh
 .kakao-btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(254,229,0,.35)}
 .modal-close{font-size:12px;color:var(--muted);background:none;border:none;cursor:pointer;margin-top:4px;}
 .modal-close:hover{color:var(--white)}
+
+/* ─── 모바일 최적화 ─── */
+@media(max-width:479px){
+  .page{padding:0 14px 60px}
+  .hero-box{padding:16px 14px 18px;margin-bottom:16px;}
+  .brand-title{font-size:21px;}
+  .stats-row{gap:7px;margin-bottom:16px;}
+  .stat-card{padding:12px 7px;}
+  .stat-num{font-size:18px;}
+  .stat-label{font-size:9px;}
+  .intro-card{padding:18px 14px;margin-bottom:16px;}
+  .intro-title{font-size:14px;}
+  .intro-text{font-size:12px;}
+  .intro-badges{gap:6px;margin-top:10px;}
+  .intro-badge{font-size:10px;padding:3px 9px;}
+  .pkg{padding:16px 14px 13px;margin-bottom:16px;}
+  .price-main{font-size:26px;}
+  .sample-card{padding:16px 14px;margin-bottom:16px;}
+  .sample-text{font-size:12px;}
+  .sample-blur{font-size:12px;}
+  .form-card{padding:20px 14px;border-radius:18px;}
+  .fgroup{margin-bottom:13px;}
+  .finput{font-size:16px;padding:11px 12px;}
+  .cta{padding:15px;font-size:15px;}
+  .review-card{flex:0 0 195px;padding:13px;}
+  .review-text{font-size:11px;}
+  .modal-box{padding:26px 18px calc(28px + env(safe-area-inset-bottom));width:calc(100% - 20px);}
+  .modal-title{font-size:15px;}
+  .modal-price{font-size:22px;}
+  .kakao-btn{padding:13px;font-size:14px;}
+  .loading-title{font-size:18px;}
+}
+@supports(padding-bottom:env(safe-area-inset-bottom)){
+  .modal-box{padding-bottom:calc(28px + env(safe-area-inset-bottom));}
+}
 </style>
 </head>
 <body>
