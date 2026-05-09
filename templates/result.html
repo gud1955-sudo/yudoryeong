@@ -107,6 +107,51 @@ body{font-family:var(--font-n);background:var(--bg);color:var(--white);min-heigh
 .kakao-btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(254,229,0,.35)}
 .modal-close{font-size:12px;color:var(--muted);background:none;border:none;cursor:pointer;}
 .modal-close:hover{color:var(--white)}
+
+/* ─── 모바일 최적화 ─── */
+@media(max-width:479px){
+  .page{padding:20px 14px 60px;}
+  .top-bar{margin-bottom:18px;}
+  .top-logo{font-size:13px;}
+
+  .saju-card{padding:18px 14px;margin-bottom:16px;}
+  .saju-name{font-size:16px;margin-bottom:12px;}
+  .pillars{gap:6px;}
+  .pillar{padding:10px 6px;border-radius:10px;}
+  .pillar-label{font-size:9px;margin-bottom:4px;}
+  .pillar-hanja{font-size:19px;}
+  .pillar-korean{font-size:10px;}
+
+  .preview-card{padding:20px 14px;margin-bottom:16px;}
+  .bubble{padding:12px 13px;}
+  .bubble-text{font-size:13px;line-height:1.9;}
+  .yudo-avatar{width:40px;height:40px;}
+
+  .blur-card{margin-bottom:16px;}
+  .blur-inner{padding:16px 14px 0;}
+  .blur-text{font-size:12px;}
+  .lock-section{padding:0 14px 22px;gap:12px;}
+  .lock-title{font-size:14px;}
+  .lock-items{gap:6px;}
+  .lock-item{font-size:11px;padding:3px 10px;}
+  .pay-btn{padding:15px;font-size:15px;max-width:100%;}
+
+  .detail-card{padding:20px 14px;margin-bottom:14px;}
+  .detail-text{font-size:13px;line-height:2;}
+  .kakao-share-btn{font-size:14px;padding:13px;}
+
+  .modal-box{padding:26px 18px calc(24px + env(safe-area-inset-bottom));width:calc(100% - 24px);}
+  .modal-orb{width:48px;height:48px;font-size:22px;}
+  .modal-title{font-size:15px;}
+  .modal-desc{font-size:12px;}
+  .modal-items{padding:11px 12px;}
+  .modal-item{font-size:11px;}
+  .modal-price{font-size:22px;}
+  .kakao-btn{padding:13px;font-size:14px;}
+}
+@supports(padding-bottom:env(safe-area-inset-bottom)){
+  .modal-box{padding-bottom:calc(26px + env(safe-area-inset-bottom));}
+}
 </style>
 </head>
 <body>
