@@ -1,292 +1,49 @@
-FULL_ANALYSIS_PROMPT = """
-당신은 수십 년 경력의 명리학자 유도령이오. 지금부터 의뢰인의 사주팔자 원국을 감정서 형식으로 풀어주시오.
-의뢰인을 부를 때는 반드시 이름 뒤에 님을 붙여 호칭하시오. 예) 홍길동님, 김영희님. 절대 이름만 단독으로 쓰지 마시오.
-이 감정서는 타고난 사주 원국 분석에 집중하시오. 월별 운세나 신년운세 내용은 절대 포함하지 마시오.
-항목 제목은 [ ] 안에 표시하고, 본문은 자연스러운 문장으로 이어 쓰시오.
-별표, 이모지, 구분선, 숫자 목록 등 일체의 기호는 절대 쓰지 마시오.
-한자를 쓸 때는 반드시 괄호 안에 한글 독음을 병기하시오.
-명리학 용어를 처음 등장할 때는 반드시 쉬운 말로 풀어 설명하시오. 예) 일간(내 사주의 중심이 되는 글자), 용신(내 사주에 가장 도움이 되는 기운), 관성(직업·사회적 지위와 관련된 기운) 처럼 괄호 안에 일반인도 바로 이해할 수 있게 설명하시오.
-각 항목의 내용이 다른 항목과 겹치지 않도록 하시오. 같은 내용을 반복하지 마시오.
-
-[사주 원국 해석]
-
-일간(내 사주의 중심 글자)의 오행과 음양을 중심으로 이 사람이 타고난 본질적 기질을 설명하시오.
-년주·월주·일주·시주가 서로 어떻게 작용하는지, 천간과 지지의 합·충·형·파 관계를 짚어주시오.
-오행의 과다와 결핍이 삶 전체에 어떤 구체적인 패턴으로 드러나는지 서술하시오.
-용신(내 사주에 가장 도움이 되는 기운)과 기신(내 사주를 방해하는 기운)이 무엇인지, 그것이 이 사람의 삶에 어떻게 작용해왔는지 설명하시오.
-
-[타고난 성격과 내면]
-
-겉으로 드러나는 성격과 혼자 있을 때의 본 모습이 어떻게 다른지 사주 근거와 함께 서술하시오.
-이 사람이 평생 반복하는 심리 패턴, 강점, 그리고 스스로도 모르는 약점을 짚어주시오.
-인간관계에서 이 사람이 본능적으로 끌리는 유형과 갈등을 일으키는 유형을 설명하시오.
-
-[연애와 결혼운]
-
-이 사주에서 배우자성(배우자와 인연을 맺게 해주는 기운)이 어디에 어떻게 자리하고 있는지 구체적으로 설명하시오.
-평생 인연이 들어오는 나이대와 잘 맞는 상대의 오행·일간을 알려주시오.
-결혼 후 가정운의 흐름, 부부 관계의 특징과 주의점을 서술하시오.
-
-[직업·적성·커리어운]
-
-관성(직업·사회적 지위와 관련된 기운)과 식상(재능·표현력과 관련된 기운)의 배치로 본 타고난 직업 적성과 능력을 설명하시오.
-평생 가장 빛날 수 있는 분야와 피해야 할 분야를 구체적으로 짚어주시오.
-직장 생활과 사업 중 어느 쪽이 맞는지, 평생 커리어의 큰 흐름을 서술하시오.
-
-[재물운과 금전 흐름]
-
-정재(꾸준히 벌어들이는 돈)와 편재(한번에 크게 들어오는 돈)의 비율과 위치로 본 이 사람과 돈의 근본적인 관계를 설명하시오.
-재물이 쌓이는 방식, 돈을 버는 패턴, 새어나가는 구멍이 어디인지 서술하시오.
-평생 재물운의 큰 흐름과 노년의 경제적 안정 여부를 서술하시오.
-
-[건강과 체질]
-
-오행의 불균형이 신체 어느 기관에 영향을 미치는지 오장육부와 연결하여 설명하시오.
-평생 조심해야 할 지병이나 체질적 약점, 건강 관리 방향을 짚어주시오.
-
-[올해 2026년 한 줄 총평]
-
-타고난 사주 원국을 바탕으로, 2026년 병오년이 이 사람에게 어떤 해인지 딱 두세 문장으로만 짚어주시오.
-월별 분석이나 영역별 세부 운세는 쓰지 마시오. 그것은 신년운세에서 다루는 내용이오.
-
-최소 60줄 이상, 읽는 사람이 자신의 이야기라고 느낄 만큼 구체적이고 개인화된 감정서를 작성하시오.
-각 항목은 서로 내용이 겹치지 않게 하고, 억지로 분량을 늘리지 마시오.
-마지막은 유도령이 이 사람의 삶 전체를 꿰뚫어 본 뒤 전하는 진심 어린 한 마디로 마무리하시오.
-"""
-
-
-SINN_PROMPT = """
-당신은 수십 년 경력의 명리학자 유도령이오. 지금부터 의뢰인의 2026년 병오년 신년운세를 감정서 형식으로 풀어주시오.
-의뢰인을 부를 때는 반드시 이름 뒤에 님을 붙여 호칭하시오. 예) 홍길동님, 김영희님. 절대 이름만 단독으로 쓰지 마시오.
-이 감정서는 2026년 한 해의 운세 흐름에만 집중하시오. 타고난 성격·적성·평생운 분석은 절대 포함하지 마시오.
-항목 제목은 [ ] 안에 표시하고, 본문은 자연스러운 문장으로 이어 쓰시오.
-별표, 이모지, 구분선, 숫자 목록 등 일체의 기호는 절대 쓰지 마시오.
-한자를 쓸 때는 반드시 괄호 안에 한글 독음을 병기하시오.
-명리학 용어를 처음 등장할 때는 반드시 쉬운 말로 풀어 설명하시오. 예) 세운(그 해의 기운), 관성(직업·사회적 지위와 관련된 기운), 재성(돈·재물과 관련된 기운) 처럼 괄호 안에 일반인도 바로 이해할 수 있게 설명하시오.
-각 항목의 내용이 다른 항목과 겹치지 않도록 하시오. 같은 내용을 반복하지 마시오.
-
-[2026년 총운 — 병오년이 이 사주에 미치는 영향]
-
-丙火(병화)가 이 사주 일간과 어떤 관계를 형성하는지 설명하시오.
-午火(오화)가 기존 지지들과 어떤 작용을 일으키는지 분석하시오.
-2026년이 이 사람에게 전반적으로 어떤 해인지 — 기회의 해인지, 안정의 해인지, 변화의 해인지 — 명확하게 짚어주시오.
-올해 가장 강하게 작용하는 키워드 세 가지를 선정하고 각각 사주 근거와 함께 설명하시오.
-
-[연애와 인연운]
-
-올해 인연이 들어오는 시기를 월 단위로 구체적으로 짚어주시오.
-현재 연인이 있다면 올해 관계의 흐름과 변곡점을, 없다면 인연이 시작될 가능성이 높은 달을 알려주시오.
-결혼을 고민 중인 경우 올해 결혼 적합성 여부도 서술하시오.
-
-[직업과 재물운]
-
-올해 커리어 변화의 시기와 이직·창업·승진 기운이 오는 달을 알려주시오.
-올해 재물이 강하게 들어오는 달과 지출·손실이 몰리는 달을 구체적으로 서술하시오.
-투자나 계약 관련 판단을 내려야 한다면 어느 달이 좋고 어느 달이 위험한지 알려주시오.
-
-[건강운]
-
-올해 세운의 기운이 신체 어느 부위에 영향을 줄 수 있는지 분석하시오.
-특히 조심해야 할 시기와 생활 습관을 서술하시오.
-
-[월별 운세 — 1월부터 12월까지]
-
-각 달의 기운을 분석하여 월별 운세를 서술하시오.
-각 달은 최소 세 문장 이상으로 쓰고, 좋은 달과 주의할 달의 이유를 명확히 밝히시오.
-위 항목들(연애·직업·재물·건강)에서 이미 언급한 내용을 그대로 반복하지 말고, 월별 세부 흐름을 새롭게 서술하시오.
-
-[2026년 행운과 조언]
-
-올해 행운의 방향, 색, 숫자를 알려주시오.
-2026년을 가장 잘 보내기 위해 반드시 해야 할 것 두 가지와 반드시 피해야 할 것 두 가지를 서술하시오.
-
-최소 70줄 이상, 읽는 사람이 자신의 2026년이 생생하게 보이는 것처럼 구체적으로 작성하시오.
-각 항목은 서로 내용이 겹치지 않게 하고, 억지로 분량을 늘리지 마시오.
-마지막은 유도령이 2026년을 앞둔 이 사람에게 전하는 따뜻하고 진심 어린 한 마디로 마무리하시오.
-"""
-
-
-GUNG_PROMPT = """
-당신은 수십 년 경력의 명리학자 유도령이오. 지금부터 두 사람의 짝궁합을 감정서 형식으로 풀어주시오.
-두 사람을 부를 때는 반드시 이름 뒤에 님을 붙여 호칭하시오. 예) 홍길동님, 김영희님. 절대 이름만 단독으로 쓰지 마시오.
-이 감정서는 두 사람의 관계 궁합 분석에만 집중하시오. 각 개인의 성격이나 개인 운세 분석은 절대 포함하지 마시오.
-항목 제목은 [ ] 안에 표시하고, 본문은 자연스러운 문장으로 이어 쓰시오.
-별표, 이모지, 구분선, 숫자 목록 등 일체의 기호는 절대 쓰지 마시오.
-한자를 쓸 때는 반드시 괄호 안에 한글 독음을 병기하시오.
-명리학 용어를 처음 등장할 때는 반드시 쉬운 말로 풀어 설명하시오. 예) 일간(내 사주의 중심 글자), 상생(서로 도와주는 관계), 상극(서로 충돌하는 관계) 처럼 괄호 안에 일반인도 바로 이해할 수 있게 설명하시오.
-각 항목의 내용이 다른 항목과 겹치지 않도록 하시오. 같은 내용을 반복하지 마시오.
-
-[두 사주의 기운 — 첫인상과 끌림의 이유]
-
-두 사람의 일간이 오행상 어떤 관계인지(상생·상극·비화)를 설명하고, 이것이 실제 관계에서 어떻게 나타나는지 서술하시오.
-처음 만났을 때 서로가 끌리는 이유를 사주 근거로 설명하시오.
-두 사람의 사주 에너지가 합쳐졌을 때 어떤 시너지가 생기고 어디서 마찰이 발생하는지 서술하시오.
-
-[성격 궁합 — 함께 살아가는 방식]
-
-두 사람의 성격이 일상에서 어떻게 충돌하고 어떻게 보완되는지 구체적인 상황으로 설명하시오.
-한쪽의 강점이 다른 쪽의 약점을 채워주는 지점과, 반대로 서로를 자극하는 지점을 짚어주시오.
-두 사람이 함께 있을 때 에너지가 올라가는 패턴과 소모되는 패턴을 서술하시오.
-
-[연애 궁합 — 감정과 표현의 방식]
-
-두 사람이 사랑을 표현하는 방식의 차이와 그 차이를 좁히는 방법을 설명하시오.
-질투, 집착, 권태 등 연애에서 주의해야 할 요소들을 사주 근거와 함께 짚어주시오.
-두 사람 사이에서 감정적으로 위기가 올 수 있는 시기와 그 이유를 서술하시오.
-
-[결혼 궁합 — 장기적인 동반자로서의 적합성]
-
-결혼 생활에서 두 사람의 역할 분담이 어떻게 이루어지는지 설명하시오.
-경제관, 생활 리듬, 가치관의 궁합을 구체적으로 서술하시오.
-자녀운과 가정의 안정성을 사주로 분석하시오.
-이 관계가 오래갈수록 깊어지는 궁합인지, 초반 열정이 식으면 갈등이 커지는 구조인지 솔직하게 짚어주시오.
-
-[2026년 이 커플의 운세]
-
-병오년의 기운이 두 사람의 관계에 어떻게 작용하는지 분석하시오.
-올해 두 사람 관계에서 중요한 전환점이 되는 달을 짚어주시오.
-올해 커플에게 특히 좋은 달과 갈등이 커질 수 있는 달을 근거와 함께 알려주시오.
-
-[궁합 점수와 총평]
-
-연애 궁합, 결혼 궁합, 소통 궁합, 재물 궁합, 미래 궁합을 각각 100점 만점으로 평가하고 각 점수의 근거를 두 문장 이상으로 설명하시오.
-종합 점수와 함께 이 궁합을 한 문장으로 정의하시오.
-이 커플이 오래 행복하게 함께하기 위해 반드시 알아야 할 핵심 한 가지를 서술하시오.
-
-최소 70줄 이상, 두 사람이 읽었을 때 서로를 더 깊이 이해하게 되는 감정서를 작성하시오.
-각 항목은 서로 내용이 겹치지 않게 하고, 억지로 분량을 늘리지 마시오.
-마지막은 유도령이 두 사람에게 직접 전하는, 이 인연에 대한 진심 어린 한 마디로 마무리하시오.
-"""
-
-
-# ─── 캐시 ────────────────────────────────────────────────────────
-BASE_CACHE     = {}
-DETAIL_CACHE   = {}
-SINNYEON_CACHE = {}
-GUNGHAP_CACHE  = {}
-
-
-# ─── 정통사주 라우트 ──────────────────────────────────────────────
-@app.route('/saju')
-def saju_page():
-    return render_template('saju_input.html')
-
-@app.route('/')
-def home():
-    return render_template('index.html')
-
-@app.route('/analyze', methods=['POST'])
-def analyze():
-    """무료 기본 사주 분석 - 사주팔자는 실제 만세력 계산, 맛보기만 Gemini"""
-    data = request.json
-    gender, name = data['gender'], data['name']
-    birth, time = parse_birth_params(data)
-    base_key = make_base_key(gender, birth, time)
-
-    try:
-        if base_key not in BASE_CACHE:
-            # ── 1. 실제 만세력으로 사주팔자 계산 ──
-            parts = birth.split('-')
-            year, month, day = int(parts[0]), int(parts[1]), int(parts[2])
-
-            hour, ampm = None, None
-            if time != '모름':
-                # "오전 10시 30분" 파싱
-                am_match = re.search(r'(오전|오후)', time)
-                h_match  = re.search(r'(\d+)시', time)
-                if am_match and h_match:
-                    ampm = am_match.group(1)
-                    hour = int(h_match.group(1))
-
-            saju_flat, saju_str = calc_saju(year, month, day, hour, ampm)
-
-            # ── 2. 맛보기만 Gemini에게 (사주 계산값 전달) ──
-            ilgan = saju_flat.get('일주천간',{})
-            iljiji = saju_flat.get('일주지지',{})
-            prompt = f"""당신은 사주명리학의 대가 유도령이오. 위엄 있는 도사님 말투를 쓰시오.
-인공지능, 데이터, AI 같은 단어는 절대 금지하오. 이모지나 특수기호는 쓰지 마시오.
-의뢰인을 부를 때는 반드시 이름 뒤에 님을 붙이시오. 예) 홍길동님.
-
-{name}님 사주: {gender} / {birth} / {saju_str}
-일주: {ilgan.get('hanja','?')}({ilgan.get('oheng','?')}) {iljiji.get('hanja','?')}({iljiji.get('oheng','?')})
-
-{name}님의 사주를 바탕으로 타고난 기질과 올해 운세의 핵심을 딱 2~3문장으로만 서술하시오.
-명리학 용어를 써서 구체적으로, 막연한 표현은 절대 금지하오.
-"""
-            full = call_gemini(prompt, temperature=0.6)
-            preview = full.strip()
-            if '[맛보기]' in preview:
-                preview = preview.split('[맛보기]')[-1].strip()
-            preview = trim_preview(preview)
-
-            BASE_CACHE[base_key] = {
-                'saju': saju_flat,
-                'preview': preview,
-                'saju_str': saju_str
-            }
-
-        cached = BASE_CACHE[base_key]
-        return jsonify({
-            'saju': cached['saju'],
-            'preview': cached.get('preview', '')
-        })
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-@app.route('/pay_analyze', methods=['POST'])
-def pay_analyze():
-    """결제 후 종합 사주 상세 분석"""
-    data = request.json
-    gender, name = data['gender'], data['name']
-    birth, time = parse_birth_params(data)
-    base_key   = make_base_key(gender, birth, time)
-    detail_key = make_detail_key(gender, birth, time)
-    try:
-        if base_key not in BASE_CACHE:
-            parts = birth.split('-')
-            yr, mo, dy = int(parts[0]), int(parts[1]), int(parts[2])
-            hour, ampm = None, None
-            if time != '모름':
-                am = re.search(r'(오전|오후)', time)
-                hm = re.search(r'(\d+)시', time)
-                if am and hm: ampm = am.group(1); hour = int(hm.group(1))
-            sf, ss = calc_saju(yr, mo, dy, hour, ampm)
-            BASE_CACHE[base_key] = {'saju': sf, 'saju_str': ss, 'preview': ''}
-        cached = BASE_CACHE[base_key]
-        if detail_key not in DETAIL_CACHE:
-            prompt = (
-                      f"당신은 영험한 명리학자 유도령이오. 위엄 있는 도사님 말투(~하오, ~이니라, ~할 것이오)를 한결같이 쓰시오.\n"
-                      f"이모지, 별표(**), 밑줄(__), 특수기호 일절 사용하지 마시오.\n"
-                      f"숫자 목록이나 항목 기호 사용하지 마시오. 모든 내용은 자연스러운 문장으로 이어 서술하시오.\n"
-                      f"인공지능, 데이터, AI, 알고리즘 같은 단어는 절대 쓰지 마시오.\n"
-                      f"한자를 쓸 때는 반드시 괄호 안에 한글 독음을 병기하시오. 예) 庚金(경금), 丙午(병오)\n"
-                      f"항목 구분이 필요하면 빈 줄로만 구분하고 제목 앞에 어떤 기호도 붙이지 마시오.\n\n"
-                      f"{name}님 정보: {name} / {gender} / {birth} / {time}\n"
-                      f"사주팔자: {cached['saju_str']}\n\n"
-                      + FULL_ANALYSIS_PROMPT)
-            DETAIL_CACHE[detail_key] = attach_nim(call_gemini(prompt, temperature=0.5), [name])
-        return jsonify({'detail': DETAIL_CACHE[detail_key]})
-    except Exception as e:
-        import traceback; traceback.print_exc()
-        return jsonify({"error": str(e)}), 500
-
-@app.route('/clear_cache', methods=['POST'])
-def clear_cache():
-    BASE_CACHE.clear()
-    DETAIL_CACHE.clear()
-    GUNGHAP_CACHE.clear()
-    SINNYEON_CACHE.clear()
-    return jsonify({"ok": True})
-
-
-# ─── 짝궁합 라우트 ───────────────────────────────────────────────
-def parse_birth_params2(data, prefix):
-    """짝궁합용 - prefix='1' or '2'"""
-    birth = data.get(f'birth{prefix}', '')
-    time  = data.get(f'time{prefix}', '모름')
-    lunar = data.get(f'lunar{prefix}', False)
-    leap  = data.get(f'leap{prefix}', False)
-
+import os, re, hashlib, traceback
+from dotenv import load_dotenv
+load_dotenv()
+from google import genai
+from google.genai import types
+from flask import Flask, render_template, request, jsonify
+from saju_logic import calc_saju, lunar_to_solar
+
+app = Flask(__name__)
+
+client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY", ""))
+
+SYSTEM_MSG = (
+    "당신은 수십 년 경력의 명리학자 유도령이오. "
+    "위엄 있는 도사님 말투(~하오, ~이니라, ~할 것이오)를 한결같이 쓰시오. "
+    "인공지능, 데이터, AI 같은 단어는 절대 금지하오. "
+    "이모지나 특수기호는 쓰지 마시오. "
+    "의뢰인을 부를 때는 반드시 이름 뒤에 님을 붙이시오. "
+    "반드시 한국어로만 작성하시오. 영어 단어, 영문 약어, 로마자 표기는 일절 사용하지 마시오."
+)
+
+def call_gemini(prompt, temperature=0.6):
+    response = client.models.generate_content(
+        model="gemini-2.5-flash",
+        contents=prompt,
+        config=types.GenerateContentConfig(
+            system_instruction=SYSTEM_MSG,
+            temperature=temperature,
+        )
+    )
+    return response.text
+
+def attach_nim(text, names):
+    for name in names:
+        text = re.sub(rf'\b{re.escape(name)}(?!님)', f'{name}님', text)
+    return text
+
+def trim_preview(text, max_sentences=3):
+    sentences = re.split(r'(?<=[.!?])\s+', text.strip())
+    return ' '.join(sentences[:max_sentences])
+
+def parse_birth_params(data):
+    birth = data.get('birth', '')
+    time  = data.get('time', '모름')
+    lunar = data.get('lunar', False)
+    leap  = data.get('leap', False)
     if birth and lunar:
         try:
             y, m, d = [int(x) for x in birth.split('-')]
@@ -296,214 +53,343 @@ def parse_birth_params2(data, prefix):
             pass
     return birth, time
 
-# ─── 짝궁합 ────────────────────────────────────────────────────────
+def make_key(*args):
+    return hashlib.md5('|'.join(str(a) for a in args).encode()).hexdigest()
 
-GUNGHAP_CACHE = {}  # 궁합 캐시
+def parse_time(time_str):
+    hour, ampm = None, None
+    if time_str and time_str != '모름':
+        am_match = re.search(r'(오전|오후)', time_str)
+        h_match  = re.search(r'(\d+)시', time_str)
+        if am_match and h_match:
+            ampm = am_match.group(1)
+            hour = int(h_match.group(1))
+    return hour, ampm
 
-def make_gunghap_key(g1, b1, t1, g2, b2, t2):
-    return hashlib.md5(f"{g1}|{b1}|{t1}|{g2}|{b2}|{t2}".encode()).hexdigest()
+DETAIL_BASE = (
+    "당신은 영험한 명리학자 유도령이오. 위엄 있는 도사님 말투(~하오, ~이니라, ~할 것이오)를 한결같이 쓰시오.\n"
+    "이모지, 별표(**), 밑줄(__), 특수기호 일절 사용하지 마시오.\n"
+    "인공지능, 데이터, AI, 알고리즘 같은 단어는 절대 쓰지 마시오.\n"
+    "한자를 쓸 때는 반드시 괄호 안에 한글 독음을 병기하시오.\n"
+    "항목 구분이 필요하면 빈 줄로만 구분하고 제목 앞에 어떤 기호도 붙이지 마시오.\n"
+    "반드시 한국어로만 작성하시오. 영어 단어, 영문 약어, 로마자 표기는 일절 사용하지 마시오.\n\n"
+)
 
-@app.route('/gunghap')
-def gunghap_page():
-    return render_template('gunghap.html')
+# ─── 프롬프트 ────────────────────────────────────────────────────────
 
-@app.route('/gunghap_preview', methods=['POST'])
-def gunghap_preview():
-    """두 사람 사주 계산 + 무료 궁합 맛보기"""
-    data = request.json
-    n1, g1 = data['name1'], data['gender1']
-    n2, g2 = data['name2'], data['gender2']
-    b1, t1 = parse_birth_params2(data, '1')
-    b2, t2 = parse_birth_params2(data, '2')
+FULL_ANALYSIS_PROMPT = """
+아래 6개 카테고리를 순서대로 빠짐없이 서술하시오.
+각 항목은 최소 5문장 이상, 전체 최소 80줄 이상으로 작성하시오.
+읽는 사람이 "내 얘기다"라고 느낄 만큼 구체적으로 쓰시오.
 
-    try:
-        # 두 사람 사주 계산
-        def parse_birth(birth, time):
-            y, m, d = [int(x) for x in birth.split('-')]
-            hour, ampm = None, None
-            if time != '모름':
-                am_match = re.search(r'(오전|오후)', time)
-                h_match  = re.search(r'(\d+)시', time)
-                if am_match and h_match:
-                    ampm = am_match.group(1)
-                    hour = int(h_match.group(1))
-            return calc_saju(y, m, d, hour, ampm)
+1. 선천적 기질 및 성향
 
-        saju1_flat, saju1_str = parse_birth(b1, t1)
-        saju2_flat, saju2_str = parse_birth(b2, t2)
+나의 핵심 오행: 일간을 중심으로 이 사람이 타고난 본연의 기질과 성질을 서술하시오.
+심리 분석: 십신(十神)을 통한 성격 장단점과 무의식적으로 반복하는 행동 패턴을 짚어주시오.
+사회적 페르소나: 타인에게 보여지는 겉모습과 실제 내면의 차이를 사주 근거와 함께 설명하시오.
 
-        # 오행 상생/상극 판단
-        il1 = saju1_flat.get('일주천간', {}).get('oheng', '')
-        il2 = saju2_flat.get('일주천간', {}).get('oheng', '')
+2. 재물 및 경제운
 
-        SANGSAENG = [('목','화'),('화','토'),('토','금'),('금','수'),('수','목')]
-        SANGGEUK  = [('목','토'),('토','수'),('수','화'),('화','금'),('금','목')]
+재물 그릇의 크기: 정재(正財)와 편재(偏財)의 배치로 본 타고난 자산 규모와 돈을 모으는 방식을 서술하시오.
+투자 성향: 공격적 투자와 안정적 저축 중 이 사주에 맞는 방식과 그 이유를 설명하시오.
+재테크 시점: 재물이 들어오기 좋은 시기와 지출을 단속해야 하는 시기를 연도별·월별로 구체적으로 안내하시오.
 
-        if (il1, il2) in SANGSAENG or (il2, il1) in SANGSAENG:
-            relation = '상생(相生) — 서로를 살리는 기운'
-        elif (il1, il2) in SANGGEUK or (il2, il1) in SANGGEUK:
-            relation = '상극(相克) — 긴장과 자극의 기운'
-        else:
-            relation = '비화(比和) — 같은 기운끼리의 만남'
+3. 직업 및 커리어
 
-        # 맛보기 프롬프트
-        prompt = f"""당신은 사주명리학의 대가 유도령이오. 위엄 있는 도사님 말투를 쓰시오.
-인공지능, 데이터, AI 같은 단어는 절대 금지하오. 이모지나 특수기호는 쓰지 마시오.
+천직과 직업군: 관성(官星)과 식상(食傷)의 배치로 본 유리한 산업군과 직업 유형을 추천하시오.
+직장 내 처세: 상사·동료와의 관계 패턴 및 승진운의 흐름을 서술하시오.
+이직 및 창업 타이밍: 변화를 주기에 가장 기운이 좋은 시기와 피해야 할 시기를 명확히 짚어주시오.
 
-{n1}님({il1}) / {n2}님({il2}) — 일간 관계: {relation}
-{n1}님 사주: {saju1_str}
-{n2}님 사주: {saju2_str}
+4. 애정 및 인간관계
 
-두 사람의 짝궁합 핵심을 딱 2~3문장으로만 서술하시오.
-오행 관계가 실제 관계에 어떻게 나타나는지 명리학 용어로 구체적으로 쓰시오.
+연애 스타일: 이 사람이 끌리는 상대 유형과 실제로 잘 맞는 상대의 차이를 사주로 설명하시오.
+결혼 및 배우자운: 인연이 나타나는 시기와 배우자의 오행·일간 특징을 서술하시오.
+대인관계 솔루션: 관계에서 갈등이 생기기 쉬운 살(煞)이나 합(合)의 작용과 개선 방법을 제시하시오.
+
+5. 건강 및 라이프스타일
+
+취약한 신체 부위: 오행의 과다·결핍에 따라 주의해야 할 신체 부위와 질환을 설명하시오.
+맞춤형 개운법: 부족한 기운을 채워주는 행운의 색상·숫자·방향·음식을 구체적으로 안내하시오.
+멘탈 관리: 스트레스에 취약한 시기와 마음을 다스리는 방법을 서술하시오.
+
+6. 주기별 상세 운세
+
+대운 분석: 현재 대운(大運)의 흐름 속에서 이 사람이 인생의 어느 단계에 있는지 설명하시오.
+2026년 월별 운세: 병오년(丙午年) 1월부터 12월까지 각 달의 기운을 최소 두 문장씩 서술하시오.
+인생의 골든타임: 중요한 결정을 내리기에 가장 길한 시기를 구체적으로 짚어주시오.
+
+마지막은 유도령이 이 사람의 삶 전체를 꿰뚫어 본 뒤 전하는 진심 어린 한 마디로 마무리하시오.
 """
-        preview = trim_preview(attach_nim(call_gemini(prompt, temperature=0.6), [n1, n2]))
 
-        return jsonify({
-            'saju1': saju1_flat,
-            'saju2': saju2_flat,
-            'saju1_str': saju1_str,
-            'saju2_str': saju2_str,
-            'il1': il1, 'il2': il2,
-            'relation': relation,
-            'preview': preview
-        })
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+SINNYEON_PROMPT = """
+아래 항목을 순서대로 빠짐없이 서술하시오. 전체 최소 70줄 이상으로 작성하시오.
 
-@app.route('/gunghap_detail', methods=['POST'])
-def gunghap_detail():
-    """결제 후 상세 궁합 분석"""
-    data = request.json
-    n1, g1 = data['name1'], data['gender1']
-    n2, g2 = data['name2'], data['gender2']
-    b1, t1 = parse_birth_params2(data, '1')
-    b2, t2 = parse_birth_params2(data, '2')
-    try:
-        def _calc(birth, time):
-            y, m, d = [int(x) for x in birth.split('-')]
-            hour, ampm = None, None
-            if time != '모름':
-                am = re.search(r'(오전|오후)', time)
-                hm = re.search(r'(\d+)시', time)
-                if am and hm: ampm = am.group(1); hour = int(hm.group(1))
-            return calc_saju(y, m, d, hour, ampm)
-        sf1, ss1 = _calc(b1, t1)
-        sf2, ss2 = _calc(b2, t2)
-        il1 = (sf1.get('일주천간') or {}).get('oheng', '')
-        il2 = (sf2.get('일주천간') or {}).get('oheng', '')
-        SANGSAENG = [('목','화'),('화','토'),('토','금'),('금','수'),('수','목')]
-        SANGGEUK  = [('목','토'),('토','수'),('수','화'),('화','금'),('금','목')]
-        if   (il1,il2) in SANGSAENG or (il2,il1) in SANGSAENG: rel = '상생(相生) 서로를 살리는 기운'
-        elif (il1,il2) in SANGGEUK  or (il2,il1) in SANGGEUK:  rel = '상극(相克) 긴장과 자극의 기운'
-        else:                                                     rel = '비화(比和) 같은 기운끼리의 만남'
-        gkey = make_gunghap_key(g1, b1, t1, g2, b2, t2)
-        if gkey not in GUNGHAP_CACHE:
-            prompt = (
-                      f"당신은 영험한 명리학자 유도령이오. 위엄 있는 도사님 말투(~하오, ~이니라, ~할 것이오)를 한결같이 쓰시오.\n"
-                      f"이모지, 별표(**), 밑줄(__), 특수기호 일절 사용하지 마시오.\n"
-                      f"숫자 목록이나 항목 기호 사용하지 마시오. 모든 내용은 자연스러운 문장으로 이어 서술하시오.\n"
-                      f"인공지능, 데이터, AI, 알고리즘 같은 단어는 절대 쓰지 마시오.\n"
-                      f"한자를 쓸 때는 반드시 괄호 안에 한글 독음을 병기하시오. 예) 庚金(경금), 丙午(병오)\n"
-                      f"항목 구분이 필요하면 빈 줄로만 구분하고 제목 앞에 어떤 기호도 붙이지 마시오.\n\n"
-                      f"[{n1}님] {g1} / {b1} / {t1}\n사주: {ss1} / 일간: {il1}\n\n"
-                      f"[{n2}님] {g2} / {b2} / {t2}\n사주: {ss2} / 일간: {il2}\n\n"
-                      f"두 사람 일간 관계: {rel}\n\n"
-                      + GUNG_PROMPT)
-            GUNGHAP_CACHE[gkey] = attach_nim(call_gemini(prompt, temperature=0.5), [n1, n2])
-        return jsonify({'detail': GUNGHAP_CACHE[gkey], 'saju1': sf1, 'saju2': sf2})
-    except Exception as e:
-        import traceback; traceback.print_exc()
-        return jsonify({"error": str(e)}), 500
+2026년 총운
+丙火(병화)와 午火(오화)가 이 사주에 어떤 관계를 형성하는지,
+올해가 기회·안정·변화 중 어떤 해인지 명확히 짚어주시오.
 
+재물 및 경제운
+올해 재물이 강하게 들어오는 달과 지출을 단속해야 하는 달을 구체적으로 서술하시오.
+투자·저축 중 올해 이 사주에 유리한 방향을 설명하시오.
 
-# ─── 신년운세 라우트 ──────────────────────────────────────────────
-def make_sinnyeon_key(gender, birth, time):
-    return hashlib.md5(f"sinnyeon|{gender}|{birth}|{time}".encode()).hexdigest()
+직업 및 커리어운
+올해 커리어 변화 시기, 이직·창업에 유리한 달과 피해야 할 시기를 서술하시오.
+
+애정 및 인간관계운
+올해 인연이 들어오는 시기를 월 단위로 구체적으로 짚어주시오.
+현재 연애 중이라면 관계의 흐름과 결혼운을 함께 서술하시오.
+
+건강운
+올해 세운의 기운이 신체 어느 부위에 영향을 주는지 분석하고 개운법을 제시하시오.
+
+월별 운세 — 1월부터 12월까지
+각 달의 기운을 최소 두 문장 이상으로 구체적으로 서술하시오.
+
+2026년 행운 가이드
+행운의 방향·색·숫자, 반드시 해야 할 것 두 가지와 피해야 할 것 두 가지를 서술하시오.
+
+마지막은 2026년을 앞둔 이 사람에게 전하는 따뜻하고 진심 어린 한 마디로 마무리하시오.
+"""
+
+LOVE_PROMPT = """
+아래 항목을 순서대로 빠짐없이 서술하시오. 전체 최소 60줄 이상으로 작성하시오.
+
+연애운 총론
+도화살(桃花殺)·홍염살·배우자성의 위치와 기운을 분석하시오.
+이 사람이 사랑에서 반복하는 패턴과 그 근거를 사주로 설명하시오.
+
+연애 스타일
+이 사람이 끌리는 상대 유형과 실제로 잘 맞는 상대의 오행·일간 차이를 설명하시오.
+연애할 때 강점과 주의해야 할 습관을 짚어주시오.
+
+결혼 및 배우자운
+배우자성의 위치로 본 인연이 나타나는 시기와 배우자의 특징을 서술하시오.
+결혼에 유리한 시기와 조심해야 할 시기를 연도별로 안내하시오.
+
+2026년 연애운
+올해 인연이 들어오거나 관계 변화가 일어날 시기를 월 단위로 서술하시오.
+이별·재회·고백의 적합 시기를 사주 근거와 함께 설명하시오.
+
+대인관계 솔루션
+갈등이 생기기 쉬운 살(煞)이나 합(合)의 작용과 관계 개선 방법을 제시하시오.
+
+마지막은 유도령이 이 사람의 인연에 대해 전하는 진심 어린 한 마디로 마무리하시오.
+"""
+
+# ─── 캐시 ───────────────────────────────────────────────────────────
+BASE_CACHE     = {}
+DETAIL_CACHE   = {}
+SINNYEON_CACHE = {}
+LOVE_CACHE     = {}
+
+# ─── 라우트 ─────────────────────────────────────────────────────────
+@app.route('/')
+def home():
+    return render_template('index.html')
+
+@app.route('/loading')
+def loading_page():
+    return render_template('loading.html')
+
+@app.route('/result')
+def result_page():
+    return render_template('result.html')
+
+@app.route('/saju')
+def saju_page():
+    return render_template('saju_input.html')
 
 @app.route('/sinnyeon')
 def sinnyeon_page():
     return render_template('sinnyeon.html')
 
-@app.route('/sinnyeon_preview', methods=['POST'])
-def sinnyeon_preview():
-    """신년운세 무료 맛보기 - 사주 계산 + 2026년 총운 한 문단"""
-    try:
-        data = request.json
-        gender, name = data.get('gender',''), data.get('name','')
-        birth, time = parse_birth_params(data)
-        base_key = make_base_key(gender, birth, time)
-        parts = birth.split('-')
-        year, month, day = int(parts[0]), int(parts[1]), int(parts[2])
-        hour, ampm = None, None
-        if time != '모름':
-            am_match = re.search(r'(오전|오후)', time)
-            h_match  = re.search(r'(\d+)시', time)
-            if am_match and h_match:
-                ampm = am_match.group(1)
-                hour = int(h_match.group(1))
+@app.route('/love')
+def love_page():
+    return render_template('love.html')
 
-        saju_flat, saju_str = calc_saju(year, month, day, hour, ampm)
-
-        if base_key not in BASE_CACHE:
-            BASE_CACHE[base_key] = {'saju': saju_flat, 'saju_str': saju_str, 'preview': ''}
-
-        ilgan = saju_flat.get('일주천간', {})
-
-        prompt = f"""당신은 사주명리학의 대가 유도령이오. 위엄 있는 도사님 말투를 쓰시오.
-인공지능, 데이터, AI 같은 단어는 절대 금지하오. 이모지나 특수기호는 쓰지 마시오.
-의뢰인을 부를 때는 반드시 이름 뒤에 님을 붙이시오. 예) 홍길동님.
-
-{name}님 사주: {gender} / {birth} / {saju_str}
-일간: {ilgan.get('hanja','?')}({ilgan.get('oheng','?')})
-
-{name}님의 2026년 병오년 신년운세 핵심을 딱 2~3문장으로만 서술하시오.
-병오년의 기운이 이 사주에 어떻게 작용하는지 명리학 용어로 구체적으로 쓰시오.
-"""
-        preview = trim_preview(call_gemini(prompt, temperature=0.6))
-
-        return jsonify({'saju': saju_flat, 'preview': preview})
-    except Exception as e:
-        traceback.print_exc()
-        return jsonify({"error": str(e), "trace": traceback.format_exc()}), 500
-
-@app.route('/sinnyeon_detail', methods=['POST'])
-def sinnyeon_detail():
-    """신년운세 유료 상세"""
+# ── 정통사주 맛보기 ──────────────────────────────────────────────────
+@app.route('/analyze', methods=['POST'])
+def analyze():
     data = request.json
     gender, name = data['gender'], data['name']
-    birth, time = parse_birth_params(data)
-    skey     = make_sinnyeon_key(gender, birth, time)
-    base_key = make_base_key(gender, birth, time)
+    birth, time  = parse_birth_params(data)
+    base_key     = make_key(gender, birth, time)
+    try:
+        if base_key not in BASE_CACHE:
+            parts = birth.split('-')
+            year, month, day = int(parts[0]), int(parts[1]), int(parts[2])
+            hour, ampm = parse_time(time)
+            saju_flat, saju_str = calc_saju(year, month, day, hour, ampm)
+            ilgan  = saju_flat.get('일주천간', {})
+            iljiji = saju_flat.get('일주지지', {})
+            prompt = (
+                f"{name}님 사주: {gender} / {birth} / {saju_str}\n"
+                f"일주: {ilgan.get('hanja','?')}({ilgan.get('oheng','?')}) "
+                f"{iljiji.get('hanja','?')}({iljiji.get('oheng','?')})\n\n"
+                f"{name}님의 사주를 바탕으로 타고난 기질과 올해 운세의 핵심을 딱 2~3문장으로만 서술하시오. "
+                f"명리학 용어를 써서 구체적으로, 막연한 표현은 절대 금지하오."
+            )
+            preview = trim_preview(call_gemini(prompt))
+            BASE_CACHE[base_key] = {'saju': saju_flat, 'saju_str': saju_str, 'preview': preview}
+
+        cached = BASE_CACHE[base_key]
+        return jsonify({'saju': cached['saju'], 'preview': cached.get('preview', '')})
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+
+# ── 정통사주 상세 ────────────────────────────────────────────────────
+@app.route('/pay_analyze', methods=['POST'])
+def pay_analyze():
+    data = request.json
+    gender, name = data['gender'], data['name']
+    birth, time  = parse_birth_params(data)
+    base_key     = make_key(gender, birth, time)
+    detail_key   = make_key('detail', gender, birth, time)
     try:
         if base_key not in BASE_CACHE:
             parts = birth.split('-')
             yr, mo, dy = int(parts[0]), int(parts[1]), int(parts[2])
-            hour, ampm = None, None
-            if time != '모름':
-                am = re.search(r'(오전|오후)', time)
-                hm = re.search(r'(\d+)시', time)
-                if am and hm: ampm = am.group(1); hour = int(hm.group(1))
+            hour, ampm = parse_time(time)
+            sf, ss = calc_saju(yr, mo, dy, hour, ampm)
+            BASE_CACHE[base_key] = {'saju': sf, 'saju_str': ss, 'preview': ''}
+        saju_str = BASE_CACHE[base_key]['saju_str']
+        if detail_key not in DETAIL_CACHE:
+            prompt = (
+                DETAIL_BASE
+                + f"{name}님 정보: {name} / {gender} / {birth} / {time}\n"
+                + f"사주팔자: {saju_str}\n\n"
+                + FULL_ANALYSIS_PROMPT
+            )
+            DETAIL_CACHE[detail_key] = attach_nim(call_gemini(prompt, temperature=0.5), [name])
+        return jsonify({'detail': DETAIL_CACHE[detail_key]})
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+
+# ── 신년운세 맛보기 ──────────────────────────────────────────────────
+@app.route('/sinnyeon_preview', methods=['POST'])
+def sinnyeon_preview():
+    try:
+        data = request.json
+        gender, name = data.get('gender',''), data.get('name','')
+        birth, time  = parse_birth_params(data)
+        base_key     = make_key(gender, birth, time)
+        parts = birth.split('-')
+        year, month, day = int(parts[0]), int(parts[1]), int(parts[2])
+        hour, ampm = parse_time(time)
+        saju_flat, saju_str = calc_saju(year, month, day, hour, ampm)
+        if base_key not in BASE_CACHE:
+            BASE_CACHE[base_key] = {'saju': saju_flat, 'saju_str': saju_str, 'preview': ''}
+        ilgan = saju_flat.get('일주천간', {})
+        prompt = (
+            f"{name}님 사주: {gender} / {birth} / {saju_str}\n"
+            f"일간: {ilgan.get('hanja','?')}({ilgan.get('oheng','?')})\n\n"
+            f"{name}님의 2026년 병오년 신년운세 핵심을 딱 2~3문장으로만 서술하시오. "
+            f"병오년의 기운이 이 사주에 어떻게 작용하는지 명리학 용어로 구체적으로 쓰시오."
+        )
+        preview = trim_preview(call_gemini(prompt))
+        return jsonify({'saju': saju_flat, 'preview': preview})
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+
+# ── 신년운세 상세 ────────────────────────────────────────────────────
+@app.route('/sinnyeon_detail', methods=['POST'])
+def sinnyeon_detail():
+    data = request.json
+    gender, name = data['gender'], data['name']
+    birth, time  = parse_birth_params(data)
+    skey         = make_key('sinnyeon', gender, birth, time)
+    base_key     = make_key(gender, birth, time)
+    try:
+        if base_key not in BASE_CACHE:
+            parts = birth.split('-')
+            yr, mo, dy = int(parts[0]), int(parts[1]), int(parts[2])
+            hour, ampm = parse_time(time)
             sf, ss = calc_saju(yr, mo, dy, hour, ampm)
             BASE_CACHE[base_key] = {'saju': sf, 'saju_str': ss, 'preview': ''}
         saju_str = BASE_CACHE[base_key]['saju_str']
         if skey not in SINNYEON_CACHE:
             prompt = (
-                      f"당신은 영험한 명리학자 유도령이오. 위엄 있는 도사님 말투(~하오, ~이니라, ~할 것이오)를 한결같이 쓰시오.\n"
-                      f"이모지, 별표(**), 밑줄(__), 특수기호 일절 사용하지 마시오.\n"
-                      f"숫자 목록이나 항목 기호 사용하지 마시오. 모든 내용은 자연스러운 문장으로 이어 서술하시오.\n"
-                      f"인공지능, 데이터, AI, 알고리즘 같은 단어는 절대 쓰지 마시오.\n"
-                      f"한자를 쓸 때는 반드시 괄호 안에 한글 독음을 병기하시오. 예) 庚金(경금), 丙午(병오)\n"
-                      f"항목 구분이 필요하면 빈 줄로만 구분하고 제목 앞에 어떤 기호도 붙이지 마시오.\n\n"
-                      f"{name}님 정보: {name} / {gender} / {birth} / {time}\n"
-                      f"사주팔자: {saju_str}\n\n"
-                      + SINN_PROMPT)
+                DETAIL_BASE
+                + f"{name}님 정보: {name} / {gender} / {birth} / {time}\n"
+                + f"사주팔자: {saju_str}\n\n"
+                + SINNYEON_PROMPT
+            )
             SINNYEON_CACHE[skey] = attach_nim(call_gemini(prompt, temperature=0.5), [name])
         return jsonify({'detail': SINNYEON_CACHE[skey]})
     except Exception as e:
-        import traceback; traceback.print_exc()
+        traceback.print_exc()
         return jsonify({"error": str(e)}), 500
 
+# ── 연애운세 맛보기 ──────────────────────────────────────────────────
+@app.route('/love_preview', methods=['POST'])
+def love_preview():
+    try:
+        data = request.json
+        gender, name  = data.get('gender',''), data.get('name','')
+        love_status   = data.get('love_status', '')
+        love_question = data.get('love_question', '')
+        birth, time   = parse_birth_params(data)
+        parts = birth.split('-')
+        year, month, day = int(parts[0]), int(parts[1]), int(parts[2])
+        hour, ampm = parse_time(time)
+        saju_flat, saju_str = calc_saju(year, month, day, hour, ampm)
+        ilgan = saju_flat.get('일주천간', {})
+        prompt = (
+            f"{name}님 사주: {gender} / {birth} / {saju_str}\n"
+            f"일간: {ilgan.get('hanja','?')}({ilgan.get('oheng','?')})\n"
+            f"현재 연애 상태: {love_status}\n"
+            f"가장 궁금한 것: {love_question}\n\n"
+            f"{name}님의 연애운 핵심을 딱 2~3문장으로만 서술하시오. "
+            f"도화살과 배우자성의 기운을 명리학 용어로 구체적으로 쓰시오."
+        )
+        preview = trim_preview(call_gemini(prompt))
+        return jsonify({'saju': saju_flat, 'preview': preview})
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+
+# ── 연애운세 상세 ────────────────────────────────────────────────────
+@app.route('/love_detail', methods=['POST'])
+def love_detail():
+    data = request.json
+    gender, name  = data['gender'], data['name']
+    love_status   = data.get('love_status', '')
+    love_question = data.get('love_question', '')
+    birth, time   = parse_birth_params(data)
+    lkey          = make_key('love', gender, birth, time, love_status, love_question)
+    base_key      = make_key(gender, birth, time)
+    try:
+        if base_key not in BASE_CACHE:
+            parts = birth.split('-')
+            yr, mo, dy = int(parts[0]), int(parts[1]), int(parts[2])
+            hour, ampm = parse_time(time)
+            sf, ss = calc_saju(yr, mo, dy, hour, ampm)
+            BASE_CACHE[base_key] = {'saju': sf, 'saju_str': ss, 'preview': ''}
+        saju_str = BASE_CACHE[base_key]['saju_str']
+        if lkey not in LOVE_CACHE:
+            prompt = (
+                DETAIL_BASE
+                + f"{name}님 정보: {name} / {gender} / {birth} / {time}\n"
+                + f"사주팔자: {saju_str}\n"
+                + f"현재 연애 상태: {love_status}\n"
+                + f"가장 궁금한 것: {love_question}\n\n"
+                + LOVE_PROMPT
+            )
+            LOVE_CACHE[lkey] = attach_nim(call_gemini(prompt, temperature=0.5), [name])
+        return jsonify({'detail': LOVE_CACHE[lkey]})
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+
+# ── 캐시 초기화 ──────────────────────────────────────────────────────
+@app.route('/clear_cache', methods=['POST'])
+def clear_cache():
+    BASE_CACHE.clear(); DETAIL_CACHE.clear()
+    SINNYEON_CACHE.clear(); LOVE_CACHE.clear()
+    return jsonify({"ok": True})
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
