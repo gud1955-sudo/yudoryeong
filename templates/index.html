@@ -501,10 +501,6 @@
             .result-inner { padding:0 24px 120px; }
             .chat-input-inner { padding:0; }
         }
-        .live-popup{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:100;background:rgba(15,8,40,0.95);border:1px solid rgba(160,100,255,0.35);border-radius:30px;padding:10px 18px;display:flex;align-items:center;gap:10px;font-size:13px;color:#fff;box-shadow:0 8px 28px rgba(80,30,180,0.4);backdrop-filter:blur(10px);max-width:320px;width:calc(100% - 48px);opacity:0;transition:opacity .4s ease;}
-        .live-popup.show{opacity:1;}
-        .live-dot{width:8px;height:8px;border-radius:50%;background:#4cff91;flex-shrink:0;box-shadow:0 0 6px #4cff91;}
-        .live-text{font-family:var(--font-n);font-size:12px;color:rgba(210,190,255,0.9);line-height:1.4;}
     </style>
 </head>
 <body>
@@ -1598,28 +1594,7 @@
             item.querySelector('.faq-a').style.maxHeight = item.querySelector('.faq-a-inner').scrollHeight + 'px';
         }
     }
-    (()=>{
-        const ages = ['20대','30대','40대','50대'];
-        const genders = ['남성','여성'];
-        const actions = [
-            '사주를 보고 있습니다','운명을 풀고 있습니다','사주팔자를 열람 중입니다',
-            '나의 운세를 확인 중입니다','올해 운의 흐름을 살피고 있습니다',
-        ];
-        const popup = document.getElementById('livePopup');
-        const text = document.getElementById('liveText');
-        function showPopup(){
-            const age = ages[Math.floor(Math.random()*ages.length)];
-            const gender = genders[Math.floor(Math.random()*genders.length)];
-            const action = actions[Math.floor(Math.random()*actions.length)];
-            text.textContent = age + ' ' + gender + '이 ' + action;
-            popup.classList.add('show');
-            setTimeout(()=>popup.classList.remove('show'), 3500);
-        }
-        setTimeout(showPopup, 4000);
-        setInterval(showPopup, 18000);
-    })();
 </script>
-<div class="live-popup" id="livePopup"><span class="live-dot"></span><span class="live-text" id="liveText"></span></div>
 <div class="share-toast" id="shareToast">링크가 복사되었습니다 ✦</div>
 </body>
 </html>
