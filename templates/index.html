@@ -602,6 +602,10 @@
             .chat-input-wrap { padding-bottom: calc(12px + env(safe-area-inset-bottom)); }
             .modal-box { padding-bottom: calc(48px + env(safe-area-inset-bottom)); }
         }
+        .live-wrap { text-align:center; padding:14px 0 6px; }
+        .live-badge { display:inline-flex; align-items:center; gap:6px; background:rgba(60,200,100,.1); border:1px solid rgba(60,200,100,.35); border-radius:20px; padding:6px 16px; font-size:12px; color:rgba(160,240,160,.9); }
+        .live-dot { width:7px; height:7px; background:#4ade80; border-radius:50%; animation:livePulse 1.6s ease-in-out infinite; flex-shrink:0; }
+        @keyframes livePulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.3;transform:scale(.65)} }
     </style>
 </head>
 <body>
@@ -623,6 +627,7 @@
         <div class="master-img-glow"></div>
     </div>
 </div>
+<div class="live-wrap"><div class="live-badge"><span class="live-dot"></span>현재 <strong id="live-cnt" style="color:#4ade80;margin:0 2px;">--</strong>명이 사주를 확인하고 있습니다</div></div>
 
 <div class="main-wrap">
     <div class="card">
@@ -1697,5 +1702,18 @@
     }
 </script>
 <div class="share-toast" id="shareToast">링크가 복사되었습니다 ✦</div>
+<script>
+(function(){
+  var el=document.getElementById('live-cnt');
+  function rand(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
+  var base=rand(25,97);
+  el.textContent=base;
+  setInterval(function(){
+    base=base+rand(-3,4);
+    if(base<25)base=25;if(base>97)base=97;
+    el.textContent=base;
+  },7000);
+})();
+</script>
 </body>
 </html>
