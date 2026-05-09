@@ -53,6 +53,10 @@ body{font-family:var(--font-n);background:var(--bg);color:var(--white);min-heigh
 .hero-box::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(220,170,60,.4),transparent);}
 .brand-title{font-family:var(--font-s);font-size:24px;font-weight:700;letter-spacing:.06em;background:linear-gradient(135deg,var(--purple-l) 0%,var(--gold-l) 45%,var(--purple-l) 100%);background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:shimmer 4s linear infinite;margin-bottom:5px;}
 .brand-sub{font-size:11px;color:var(--muted);letter-spacing:.2em}
+.live-wrap{text-align:center;padding:10px 0 22px;}
+.live-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(60,200,100,.1);border:1px solid rgba(60,200,100,.35);border-radius:20px;padding:6px 16px;font-size:12px;color:rgba(160,240,160,.9);}
+.live-dot{width:7px;height:7px;background:#4ade80;border-radius:50%;animation:livePulse 1.6s ease-in-out infinite;}
+@keyframes livePulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(.65)}}
 
 /* ─── 누적 배지 ─── */
 .stats-row{display:flex;gap:10px;margin-bottom:20px;animation:fadeUp .8s ease .1s both;}
@@ -76,10 +80,12 @@ body{font-family:var(--font-n);background:var(--bg);color:var(--white);min-heigh
 .pkg-title{text-align:center;font-family:var(--font-s);font-size:13px;color:var(--gold);letter-spacing:.1em;margin-bottom:12px;}
 .pkg-items{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:14px}
 .pkg-tag{background:linear-gradient(135deg,rgba(220,170,60,.12),rgba(160,100,255,.12));border:1px solid rgba(220,170,60,.3);border-radius:20px;padding:4px 13px;font-size:12px;color:var(--gold-l);}
-.pkg-price-row{display:flex;align-items:baseline;gap:10px;justify-content:center}
+.pkg-price-row{display:flex;align-items:baseline;gap:10px;justify-content:center;margin-top:4px;}
 .price-main{font-family:var(--font-s);font-size:30px;font-weight:700;background:linear-gradient(135deg,var(--gold-l),var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
 .price-old{font-size:13px;color:var(--muted);text-decoration:line-through}
 .price-save{font-size:11px;background:rgba(240,192,96,.18);border:1px solid rgba(240,192,96,.35);color:var(--gold);border-radius:6px;padding:2px 9px;}
+.sale-banner{text-align:center;background:rgba(255,60,60,.08);border:1px solid rgba(255,100,100,.3);border-radius:10px;padding:7px 0 6px;margin-bottom:12px;font-size:11px;color:rgba(255,160,160,.9);letter-spacing:.04em;}
+.sale-banner strong{color:#ff7070;}
 
 /* ─── 샘플 분석 ─── */
 .sample-card{background:rgba(12,6,35,.9);border:1px solid rgba(220,170,60,.2);border-radius:18px;padding:20px;margin-bottom:20px;position:relative;overflow:hidden;animation:fadeUp 1s ease .25s both;}
@@ -98,12 +104,31 @@ body{font-family:var(--font-n);background:var(--bg);color:var(--white);min-heigh
 .sec-title{font-size:10px;letter-spacing:.22em;color:rgba(220,170,60,.6);text-transform:uppercase;margin-bottom:18px;padding-bottom:10px;border-bottom:1px solid rgba(220,170,60,.1);}
 .fgroup{margin-bottom:16px}
 .flabel{display:block;font-size:11px;color:var(--muted);margin-bottom:7px;letter-spacing:.05em;}
+.name-greeting{font-family:var(--font-s);font-size:14px;color:var(--gold-l);margin-top:9px;min-height:22px;opacity:0;transform:translateY(4px);transition:opacity .4s,transform .4s;letter-spacing:.03em;}
+.name-greeting.show{opacity:1;transform:translateY(0);}
 .finput{width:100%;background:rgba(10,4,35,.75);border:1px solid rgba(160,100,255,.2);border-radius:11px;padding:11px 14px;color:var(--white);font-size:15px;font-family:var(--font-n);outline:none;transition:border-color .25s,box-shadow .25s;-webkit-appearance:none;}
 .finput:focus{border-color:rgba(220,170,60,.55);box-shadow:0 0 0 3px rgba(220,170,60,.1);}
 .finput::placeholder{color:rgba(200,175,255,.25)}
 .finput option{background:#12082a}
-.birth-row{display:flex;gap:8px}
-.birth-row .finput{text-align:center}
+.birth-row{display:flex;gap:8px;align-items:flex-start}
+.birth-row .cdrop{flex:1}
+/* ─── 커스텀 드롭다운 ─── */
+.cdrop{position:relative;}
+.cdrop-btn{display:flex;align-items:center;justify-content:space-between;width:100%;background:rgba(10,4,35,.75);border:1px solid rgba(160,100,255,.2);border-radius:11px;padding:11px 14px;color:var(--white);font-size:15px;font-family:var(--font-n);cursor:pointer;user-select:none;transition:border-color .25s,box-shadow .25s;-webkit-tap-highlight-color:transparent;}
+.cdrop.open .cdrop-btn,.cdrop-btn:focus{border-color:rgba(220,170,60,.55);box-shadow:0 0 0 3px rgba(220,170,60,.1);outline:none;}
+.cdrop-lbl{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.cdrop-lbl.ph{color:rgba(200,175,255,.35);}
+.cdrop-arr{font-size:10px;color:var(--muted);margin-left:6px;flex-shrink:0;transition:transform .2s;}
+.cdrop.open .cdrop-arr{transform:rotate(180deg);}
+.cdrop-opts{position:absolute;top:calc(100% + 4px);left:0;right:0;background:rgba(12,5,38,.97);border:1px solid rgba(160,100,255,.3);border-radius:11px;list-style:none;margin:0;padding:4px 0;max-height:0;overflow:hidden;overflow-y:auto;opacity:0;pointer-events:none;z-index:300;transition:max-height .22s ease,opacity .18s ease;scrollbar-width:thin;scrollbar-color:rgba(160,100,255,.35) transparent;}
+.cdrop.open .cdrop-opts{max-height:215px;opacity:1;pointer-events:auto;}
+.cdrop-opts li{padding:10px 14px;font-size:14px;cursor:pointer;border-bottom:1px solid rgba(160,100,255,.07);transition:background .12s;}
+.cdrop-opts li:last-child{border-bottom:none;}
+.cdrop-opts li:hover{background:rgba(160,100,255,.18);}
+.cdrop-opts li.sel{color:var(--gold-l);background:rgba(160,100,255,.13);}
+.cdrop-opts::-webkit-scrollbar{width:4px;}
+.cdrop-opts::-webkit-scrollbar-thumb{background:rgba(160,100,255,.35);border-radius:4px;}
+.time-inputs .cdrop{flex:1}
 .time-toggle-row{display:flex;align-items:center;gap:8px;margin-bottom:10px}
 .toggle-lbl{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none;}
 .toggle-lbl input{accent-color:var(--gold);width:14px;height:14px;cursor:pointer}
@@ -122,11 +147,31 @@ body{font-family:var(--font-n);background:var(--bg);color:var(--white);min-heigh
 /* ─── 결과 카드 ─── */
 .result-card{display:none;margin-top:18px;background:rgba(12,6,35,.92);border:1px solid rgba(220,170,60,.25);border-radius:18px;overflow:hidden;animation:fadeUp .5s ease;position:relative;}
 .result-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);opacity:.5;}
-.result-preview{padding:20px 20px 0}
-.result-lbl{font-size:10px;color:var(--gold);letter-spacing:.18em;text-transform:uppercase;margin-bottom:10px;}
+.result-sec{padding:20px 20px 0;}
+.result-lbl{font-size:10px;color:var(--gold);letter-spacing:.18em;text-transform:uppercase;margin-bottom:12px;}
 .result-text{font-family:var(--font-s);font-size:14px;line-height:2;color:rgba(225,205,255,.9);}
+/* 오행 그래프 */
+.oheng-wrap{display:flex;align-items:center;gap:14px;}
+.oheng-svg{width:160px;height:160px;flex-shrink:0;}
+.oheng-legend{display:flex;flex-direction:column;gap:7px;flex:1;}
+.oheng-row{display:flex;align-items:center;gap:7px;}
+.oheng-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.oheng-nm{font-size:12px;font-family:var(--font-s);min-width:14px;}
+.oheng-bar-bg{flex:1;height:3px;background:rgba(255,255,255,0.1);border-radius:2px;}
+.oheng-bar-fg{height:100%;border-radius:2px;transition:width .6s ease;}
+.oheng-num{font-size:11px;color:var(--muted);min-width:14px;text-align:right;}
+/* 사주팔자 */
+.pillars-wrap{display:flex;justify-content:space-around;gap:4px;margin-top:10px;}
+.pillar{display:flex;flex-direction:column;align-items:center;gap:3px;flex:1;padding:10px 4px;background:rgba(255,255,255,0.03);border:1px solid rgba(160,100,255,0.12);border-radius:10px;}
+.pillar-lbl{font-size:9px;color:var(--muted);letter-spacing:.06em;}
+.pillar-cg{font-size:28px;font-family:var(--font-s);line-height:1.2;}
+.pillar-jj{font-size:28px;font-family:var(--font-s);line-height:1.2;}
+.pillar-kor{font-size:9px;color:rgba(200,180,255,.5);}
+.pillar-none .pillar-cg,.pillar-none .pillar-jj{font-size:18px;color:rgba(255,255,255,.15);}
+/* 블러 */
 .blur-sec{position:relative;padding:14px 20px 22px;overflow:hidden}
 .blur-txt{font-family:var(--font-s);font-size:13px;line-height:2;color:rgba(200,180,255,.6);filter:blur(5px);user-select:none;}
+.blur-cat{font-size:10px;color:rgba(240,192,96,.7);letter-spacing:.14em;margin-top:14px;margin-bottom:2px;}
 .lock-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(to bottom,transparent 0%,rgba(8,4,25,.92) 40%);gap:12px;}
 .lock-icon-wrap{width:42px;height:42px;border:1px solid rgba(220,170,60,.4);border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(220,170,60,.08);font-size:19px;}
 .unlock-btn{background:linear-gradient(135deg,#c89020,#e8a820,#c89020);background-size:200% auto;border:none;border-radius:12px;padding:12px 28px;font-size:15px;font-weight:700;font-family:var(--font-s);color:#0f0500;cursor:pointer;transition:all .25s;animation:shimmer 3s linear infinite;}
@@ -140,7 +185,7 @@ body{font-family:var(--font-n);background:var(--bg);color:var(--white);min-heigh
 .review-track-wrap::before,.review-track-wrap::after{content:'';position:absolute;top:0;bottom:0;width:40px;z-index:2;pointer-events:none;}
 .review-track-wrap::before{left:0;background:linear-gradient(to right,var(--bg),transparent);}
 .review-track-wrap::after{right:0;background:linear-gradient(to left,var(--bg),transparent);}
-.review-track{display:flex;gap:12px;padding:4px 18px;animation:scrollReview 18s linear infinite;will-change:transform;transform:translateZ(0);}
+.review-track{display:flex;gap:12px;padding:4px 18px;animation:scrollReview 62s linear infinite;will-change:transform;transform:translateZ(0);}
 .review-track:hover{animation-play-state:paused;}
 @keyframes scrollReview{0%{transform:translate3d(0,0,0)}100%{transform:translate3d(-50%,0,0)}}
 .review-card{flex:0 0 230px;background:rgba(20,10,50,.85);border:1px solid rgba(160,100,255,.2);border-radius:14px;padding:15px 15px;position:relative;}
@@ -228,6 +273,15 @@ body{font-family:var(--font-n);background:var(--bg);color:var(--white);min-heigh
 @supports(padding-bottom:env(safe-area-inset-bottom)){
   .modal-box{padding-bottom:calc(28px + env(safe-area-inset-bottom));}
 }
+/* 유도령 토스트 */
+.yudo-toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);z-index:500;background:linear-gradient(135deg,rgba(30,8,70,.97),rgba(15,4,40,.99));border:1px solid rgba(220,100,80,.5);border-radius:16px;padding:14px 20px 14px 16px;display:flex;align-items:flex-start;gap:12px;min-width:260px;max-width:340px;box-shadow:0 8px 32px rgba(180,60,60,.3);opacity:0;transition:opacity .35s,transform .35s;pointer-events:none;}
+.yudo-toast.show{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto;}
+.toast-avatar{width:36px;height:36px;border-radius:50%;object-fit:cover;object-position:center 10%;border:1px solid rgba(220,100,80,.4);flex-shrink:0;}
+.toast-body{flex:1;}
+.toast-title{font-family:var(--font-s);font-size:13px;color:rgba(255,180,150,.95);margin-bottom:3px;letter-spacing:.02em;}
+.toast-msg{font-size:12px;color:rgba(210,180,200,.75);line-height:1.6;}
+.toast-close{background:none;border:none;color:rgba(200,160,180,.5);cursor:pointer;font-size:16px;padding:0;line-height:1;flex-shrink:0;margin-top:-2px;}
+.toast-close:hover{color:rgba(255,200,180,.9);}
 </style>
 </head>
 <body>
@@ -248,6 +302,7 @@ body{font-family:var(--font-n);background:var(--bg);color:var(--white);min-heigh
     <p class="brand-sub">✦ &nbsp; COSMIC READING &nbsp; ✦</p>
   </div>
 </div>
+<div class="live-wrap"><div class="live-badge"><span class="live-dot"></span>현재 <strong id="live-cnt" style="color:#4ade80;margin:0 2px;">--</strong>명이 사주를 확인하고 있습니다</div></div>
 
 <div class="page">
 <div class="page-inner">
@@ -255,7 +310,7 @@ body{font-family:var(--font-n);background:var(--bg);color:var(--white);min-heigh
   <!-- 누적 배지 -->
   <div class="stats-row page-stats">
     <div class="stat-card">
-      <span class="stat-num" id="cnt1">3,847</span>
+      <span class="stat-num" id="cnt1">12,483</span>
       <span class="stat-label">누적 분석</span>
     </div>
     <div class="stat-card">
@@ -288,6 +343,12 @@ body{font-family:var(--font-n);background:var(--bg);color:var(--white);min-heigh
       <span class="pkg-tag">🌙 신년운세</span>
       <span class="pkg-tag">💘 연애운세</span>
     </div>
+    <div class="sale-banner">🔥 &nbsp; 이벤트 특가 진행 중</div>
+    <div class="pkg-price-row">
+      <span class="price-old">29,000원</span>
+      <span class="price-main">9,900원</span>
+      <span class="price-save">66% 할인</span>
+    </div>
   </div>
 
   <!-- 맛보기 샘플 -->
@@ -317,6 +378,7 @@ body{font-family:var(--font-n);background:var(--bg);color:var(--white);min-heigh
     <div class="fgroup">
       <label class="flabel">성함</label>
       <input class="finput" id="userName" type="text" placeholder="이름을 입력하세요" autocomplete="off">
+      <p class="name-greeting" id="nameGreeting"></p>
     </div>
     <div class="fgroup">
       <label class="flabel">성별</label>
@@ -325,9 +387,10 @@ body{font-family:var(--font-n);background:var(--bg);color:var(--white);min-heigh
     <div class="fgroup">
       <label class="flabel">생년월일</label>
       <div class="birth-row">
-        <input class="finput" id="year" type="text" placeholder="년도" maxlength="4" inputmode="numeric" oninput="this.value=this.value.replace(/[^0-9]/g,'');if(this.value.length==4)document.getElementById('month').focus()">
-        <input class="finput" id="month" type="text" placeholder="월" maxlength="2" inputmode="numeric" oninput="lim(this,12,'day')">
-        <input class="finput" id="day" type="text" placeholder="일" maxlength="2" inputmode="numeric" oninput="lim(this,31,'ampm')">
+        <div class="cdrop" id="cdrop-year"><button type="button" class="cdrop-btn" onclick="cdropToggle('cdrop-year')"><span class="cdrop-lbl ph">년도</span><span class="cdrop-arr">▾</span></button><ul class="cdrop-opts"></ul></div>
+        <div class="cdrop" id="cdrop-month"><button type="button" class="cdrop-btn" onclick="cdropToggle('cdrop-month')"><span class="cdrop-lbl ph">월</span><span class="cdrop-arr">▾</span></button><ul class="cdrop-opts"></ul></div>
+        <div class="cdrop" id="cdrop-day"><button type="button" class="cdrop-btn" onclick="cdropToggle('cdrop-day')"><span class="cdrop-lbl ph">일</span><span class="cdrop-arr">▾</span></button><ul class="cdrop-opts"></ul></div>
+        <input type="hidden" id="year"><input type="hidden" id="month"><input type="hidden" id="day">
       </div>
     </div>
     <div class="fgroup">
@@ -337,24 +400,53 @@ body{font-family:var(--font-n);background:var(--bg);color:var(--white);min-heigh
       </div>
       <div class="time-inputs" id="timeInputs">
         <select class="finput" id="ampm" style="flex:none;width:70px"><option>오전</option><option>오후</option></select>
-        <input class="finput" id="hour" type="text" placeholder="시" maxlength="2" inputmode="numeric" oninput="lim(this,12,'min')">
-        <input class="finput" id="min" type="text" placeholder="분" maxlength="2" inputmode="numeric" oninput="lim(this,59,'')">
+        <div class="cdrop" id="cdrop-hour"><button type="button" class="cdrop-btn" onclick="cdropToggle('cdrop-hour')"><span class="cdrop-lbl ph">시</span><span class="cdrop-arr">▾</span></button><ul class="cdrop-opts"></ul></div>
+        <div class="cdrop" id="cdrop-min"><button type="button" class="cdrop-btn" onclick="cdropToggle('cdrop-min')"><span class="cdrop-lbl ph">분</span><span class="cdrop-arr">▾</span></button><ul class="cdrop-opts"></ul></div>
+        <input type="hidden" id="hour"><input type="hidden" id="min">
       </div>
     </div>
 
-    <button class="cta" id="mainBtn" onclick="runAnalysis()">🔮 &nbsp; 나의 운명 풀어보기</button>
-    <p class="cta-sub">맛보기 분석 후 결제를 진행합니다</p>
+    <button class="cta" id="mainBtn" onclick="runAnalysis()">🔮 &nbsp; 사주 보기</button>
+    <p class="cta-sub">입력 후 바로 사주를 확인합니다</p>
     <div class="result-card" id="resultCard">
-      <div class="result-preview">
-        <p class="result-lbl">✦ &nbsp; 유도령의 첫 번째 메시지</p>
+      <!-- 1. 오행 분포 -->
+      <div class="result-sec">
+        <p class="result-lbl">✦ &nbsp; 오행 분포</p>
+        <div class="oheng-wrap">
+          <svg class="oheng-svg" id="ohengSvg" viewBox="0 0 200 200"></svg>
+          <div class="oheng-legend" id="ohengLegend"></div>
+        </div>
+      </div>
+      <!-- 2. 사주팔자 -->
+      <div class="result-sec" style="padding-top:14px;">
+        <p class="result-lbl">✦ &nbsp; 사주팔자</p>
+        <div class="pillars-wrap" id="pillarsWrap"></div>
+      </div>
+      <!-- 3. 유도령 메시지 -->
+      <div class="result-sec" style="padding-top:14px;padding-bottom:16px;">
+        <p class="result-lbl">✦ &nbsp; 유도령의 천기직언</p>
         <p class="result-text" id="freeText"></p>
       </div>
+      <!-- 4. 잠긴 카테고리 블러 -->
       <div class="blur-sec">
-        <p class="blur-txt">사주팔자를 살피니 올해 도화살의 기운이 서서히 피어오르고 있습니다. 목화의 조화가 인연의 실타래를 당기고 있으니 귀인이 가까운 곳에 있을 것입니다. 특히 용신의 흐름을 따라 움직이면 예상치 못한 만남이 찾아올 것이며...</p>
+        <div class="blur-txt">
+          <p class="blur-cat">선천적 기질 및 성향</p>
+          <p>일간을 중심으로 타고난 본연의 성정을 살피건대, 오행의 조화가 남다른 구조이오. 겉으로 드러나는 사회적 페르소나와 내면의 본질이 사뭇 다르니 이를 알아야 삶이 편안해지오.</p>
+          <p class="blur-cat">재물 및 경제운</p>
+          <p>정재와 편재의 배치를 보건대 재물의 씨앗이 이미 뿌려져 있소. 재물이 강하게 들어오는 시기와 지출을 단속해야 하는 달을 명확히 짚어드리겠소.</p>
+          <p class="blur-cat">직업 및 커리어</p>
+          <p>관성과 식상의 배치로 본 천직과 유리한 직업군, 이직·창업에 가장 기운이 좋은 시기를 서술하겠소.</p>
+          <p class="blur-cat">애정 및 인간관계</p>
+          <p>도화살과 배우자성의 위치가 인연의 형태를 결정하오. 올해 귀인이 나타나는 시기와 결혼운의 흐름을 상세히 보겠소.</p>
+          <p class="blur-cat">건강 및 개운법</p>
+          <p>오행의 과부족으로 본 취약 신체 부위와 행운의 색·방향·음식을 통한 맞춤형 개운법을 안내하겠소.</p>
+          <p class="blur-cat">2026년 1월 ~ 12월 월별 운세</p>
+          <p>병오년 각 달의 기운을 상세히 풀어드리겠소. 재물·인연·건강이 집중되는 달과 조심해야 할 달을 낱낱이 짚어드리겠소.</p>
+        </div>
         <div class="lock-overlay">
           <div class="lock-icon-wrap">🔒</div>
           <button class="unlock-btn" onclick="openModal()">전체 운세 열람 — 9,900원</button>
-          <p class="unlock-sub">정통사주 · 신년운세 · 연애운세 포함</p>
+          <p class="unlock-sub">기질 · 재물 · 커리어 · 연애 · 건강 · 월별운세 포함</p>
         </div>
       </div>
     </div>
@@ -422,7 +514,38 @@ body{font-family:var(--font-n);background:var(--bg);color:var(--white);min-heigh
 </div>
 
 <script>
+var _toastTimer=null;
+function showError(title,msg){
+  var t=document.getElementById('yudoToast');
+  if(!t)return;
+  document.getElementById('toastTitle').textContent=title||'오류가 발생했소이다';
+  document.getElementById('toastMsg').textContent=msg||'';
+  clearTimeout(_toastTimer);
+  t.classList.add('show');
+  _toastTimer=setTimeout(hideToast,4500);
+}
+function hideToast(){var t=document.getElementById('yudoToast');if(t)t.classList.remove('show');}
+
 window.onload=function(){if(window.IMP)window.IMP.init("imp50011546");};
+
+/* ─── 이름 인사말 ─── */
+(function(){
+  var nameInput = document.getElementById('userName');
+  var greetEl = document.getElementById('nameGreeting');
+  var debounce = null;
+  nameInput.addEventListener('input', function(){
+    clearTimeout(debounce);
+    debounce = setTimeout(function(){
+      var name = nameInput.value.trim();
+      if(name.length > 0){
+        greetEl.textContent = name + '님 천기를 봐드리겠소';
+        greetEl.classList.add('show');
+      } else {
+        greetEl.classList.remove('show');
+      }
+    }, 300);
+  });
+})();
 (()=>{const c=document.getElementById('stars');for(let i=0;i<90;i++){const s=document.createElement('div');s.className='star';const sz=Math.random()*2+.5,isGold=Math.random()<.15;s.style.cssText='width:'+sz+'px;height:'+sz+'px;left:'+Math.random()*100+'%;top:'+Math.random()*100+'%;background:'+(isGold?'#f0c060':'white')+';--d:'+(2+Math.random()*4)+'s;--dl:'+(Math.random()*6)+'s;--mo:'+(0.1+Math.random()*0.25)+';opacity:'+(Math.random()*0.3+0.1);c.appendChild(s);}})();
 (()=>{const c=document.getElementById('goldDust');for(let i=0;i<30;i++){const p=document.createElement('div');p.className='gp';p.style.cssText='left:'+Math.random()*100+'%;top:'+(40+Math.random()*50)+'%;--dd:'+(6+Math.random()*8)+'s;--ddl:'+(Math.random()*8)+'s;--dx:'+((Math.random()-.5)*40)+'px;--dy:'+(-30-Math.random()*60)+'px';c.appendChild(p);}})();
 
@@ -469,25 +592,97 @@ const REVIEWS = [
 
 (()=>{
   const track = document.getElementById('reviewTrack');
-  // 30개 + 복제본 30개 (무한 루프용)
-  const all = [...REVIEWS, ...REVIEWS];
-  all.forEach(r => {
-    const card = document.createElement('div');
-    card.className = 'review-card';
-    const stars = '★'.repeat(r.s) + '☆'.repeat(5-r.s);
-    card.innerHTML = '<div class="review-stars">'+stars+'</div><p class="review-text">'+r.t+'</p><p class="review-name">'+r.n+'</p>';
-    track.appendChild(card);
+  function mkCard(r){
+    const c=document.createElement('div'); c.className='review-card';
+    c.innerHTML='<div class="review-stars">'+'★'.repeat(r.s)+'☆'.repeat(5-r.s)+'</div><p class="review-text">'+r.t+'</p><p class="review-name">'+r.n+'</p>';
+    return c;
+  }
+  REVIEWS.forEach(r=>track.appendChild(mkCard(r)));
+  REVIEWS.forEach(r=>track.appendChild(mkCard(r)));
+  // 레이아웃 후 실제 픽셀 거리를 측정해 정확한 keyframe 주입 (패딩 오차 제거)
+  requestAnimationFrame(function(){
+    const cs=track.children, n=REVIEWS.length;
+    if(cs.length < n*2) return;
+    const setW = cs[n].offsetLeft - cs[0].offsetLeft;
+    const st=document.createElement('style');
+    st.textContent='@keyframes scrollReview{from{transform:translate3d(0,0,0)}to{transform:translate3d(-'+setW+'px,0,0)}}';
+    document.head.appendChild(st);
   });
+})();
+// ─── 커스텀 드롭다운 ───
+function cdropClose(d){
+  d.classList.remove('open');
+  var ul=d._ul||d.querySelector('.cdrop-opts');
+  if(ul){
+    if(ul.parentElement===document.body) d.appendChild(ul);
+    ul.style.cssText='';
+    d._ul=null;
+  }
+}
+function cdropToggle(id){
+  var w=document.getElementById(id), isOpen=w.classList.contains('open');
+  document.querySelectorAll('.cdrop.open').forEach(function(d){cdropClose(d);});
+  if(!isOpen){
+    var r=w.querySelector('.cdrop-btn').getBoundingClientRect();
+    var ul=w.querySelector('.cdrop-opts');
+    w._ul=ul;
+    document.body.appendChild(ul);
+    ul.style.cssText='position:fixed;top:'+(r.bottom+4)+'px;left:'+r.left+'px;width:'+r.width+'px;z-index:9999;max-height:215px;opacity:1;pointer-events:auto;overflow-y:auto;background:rgba(12,5,38,.97);border:1px solid rgba(160,100,255,.3);border-radius:11px;list-style:none;margin:0;padding:4px 0;';
+    w.classList.add('open');
+  }
+}
+document.addEventListener('click',function(e){
+  if(!e.target.closest('.cdrop') && !e.target.closest('.cdrop-opts'))
+    document.querySelectorAll('.cdrop.open').forEach(function(d){cdropClose(d);});
+});
+window.addEventListener('scroll',function(){
+  document.querySelectorAll('.cdrop.open').forEach(function(d){
+    var ul=d._ul; if(!ul) return;
+    var r=d.querySelector('.cdrop-btn').getBoundingClientRect();
+    ul.style.top=(r.bottom+4)+'px';
+    ul.style.left=r.left+'px';
+    ul.style.width=r.width+'px';
+  });
+},true);
+function cdropBuild(wrapId, hiddenId, items){
+  const wrap=document.getElementById(wrapId);
+  const hidden=document.getElementById(hiddenId);
+  const lbl=wrap.querySelector('.cdrop-lbl');
+  const ul=wrap.querySelector('.cdrop-opts');
+  items.forEach(function(it){
+    const li=document.createElement('li');
+    li.textContent=it.l; li.dataset.v=it.v;
+    li.addEventListener('click',function(e){
+      e.stopPropagation();
+      hidden.value=it.v; lbl.textContent=it.l; lbl.classList.remove('ph');
+      ul.querySelectorAll('li').forEach(x=>x.classList.remove('sel'));
+      li.classList.add('sel');
+      cdropClose(wrap);
+    });
+    ul.appendChild(li);
+  });
+}
+(function(){
+  var y=[]; for(var i=2026;i>=1920;i--) y.push({v:i,l:i+'년'});
+  cdropBuild('cdrop-year','year',y);
+  var m=[]; for(var i=1;i<=12;i++) m.push({v:i,l:i+'월'});
+  cdropBuild('cdrop-month','month',m);
+  var d=[]; for(var i=1;i<=31;i++) d.push({v:i,l:i+'일'});
+  cdropBuild('cdrop-day','day',d);
+  var h=[]; for(var i=1;i<=12;i++) h.push({v:i,l:i+'시'});
+  cdropBuild('cdrop-hour','hour',h);
+  var mn=[]; for(var i=0;i<=59;i++) mn.push({v:i,l:i+'분'});
+  cdropBuild('cdrop-min','min',mn);
 })();
 function animateCount(el, target, suffix){
   let cur=0; const step=Math.ceil(target/60);
   const t=setInterval(()=>{cur=Math.min(cur+step,target);el.textContent=cur.toLocaleString()+suffix;if(cur>=target)clearInterval(t);},16);
 }
-setTimeout(()=>{animateCount(document.getElementById('cnt1'),3847,'');},500);
+setTimeout(()=>{animateCount(document.getElementById('cnt1'),12483,'');},500);
 
 
 function lim(el,max,nxt){el.value=el.value.replace(/[^0-9]/g,'');if(el.value.length>=2){if(parseInt(el.value)>max)el.value=String(max);if(nxt){const nx=document.getElementById(nxt);if(nx)nx.focus();}}}
-function toggleTime(){const dis=document.getElementById('noTime').checked;document.getElementById('timeInputs').style.opacity=dis?'.3':'1';['ampm','hour','min'].forEach(id=>document.getElementById(id).disabled=dis);}
+function toggleTime(){const dis=document.getElementById('noTime').checked;const ti=document.getElementById('timeInputs');ti.style.opacity=dis?'.3':'1';ti.style.pointerEvents=dis?'none':'auto';document.getElementById('ampm').disabled=dis;}
 function openModal(){document.getElementById('payModal').classList.add('open')}
 function closeModal(){document.getElementById('payModal').classList.remove('open')}
 
@@ -528,48 +723,167 @@ function hideLoading(){
   },400);
 }
 
+let _sajuPayload=null;
+
+/* ── 오행 오각형 차트 + 사주팔자 렌더링 ── */
+function showSajuResult(flat, preview){
+  const EL=['목','화','토','금','수'];
+  const COLORS={목:'#4ade80',화:'#f87171',토:'#facc15',금:'#c8d4e8',수:'#60a5fa'};
+  const HANJA={목:'木',화:'火',토:'土',금:'金',수:'水'};
+
+  /* 오행 카운트 */
+  var cnt={목:0,화:0,토:0,금:0,수:0};
+  ['년주천간','년주지지','월주천간','월주지지','일주천간','일주지지','시주천간','시주지지'].forEach(function(k){
+    var el=flat[k]&&flat[k].oheng; if(el&&cnt[el]!==undefined) cnt[el]++;
+  });
+  var maxCnt=Math.max.apply(null,EL.map(function(e){return cnt[e];}));
+  if(maxCnt<1) maxCnt=1;
+
+  /* SVG 오각형 */
+  var cx=100,cy=100,R=65,LR=88;
+  var angles=EL.map(function(_,i){return -Math.PI/2+i*2*Math.PI/5;});
+  var svg='';
+  /* 그리드 */
+  [0.25,0.5,0.75,1].forEach(function(r){
+    var pts=angles.map(function(a){return (cx+Math.cos(a)*R*r).toFixed(1)+','+(cy+Math.sin(a)*R*r).toFixed(1);}).join(' ');
+    svg+='<polygon points="'+pts+'" fill="none" stroke="rgba(160,100,255,'+(r===1?0.28:0.1)+')" stroke-width="'+(r===1?1.2:0.7)+'"/>';
+  });
+  /* 축선 */
+  angles.forEach(function(a){
+    svg+='<line x1="'+cx+'" y1="'+cy+'" x2="'+(cx+Math.cos(a)*R).toFixed(1)+'" y2="'+(cy+Math.sin(a)*R).toFixed(1)+'" stroke="rgba(160,100,255,0.15)" stroke-width="0.7"/>';
+  });
+  /* 색상 삼각형 */
+  EL.forEach(function(el,i){
+    var ni=(i+1)%5;
+    var r1=cnt[el]/maxCnt*R, r2=cnt[EL[ni]]/maxCnt*R;
+    if(r1>0||r2>0){
+      svg+='<polygon points="'+cx+','+cy+' '+(cx+Math.cos(angles[i])*r1).toFixed(1)+','+(cy+Math.sin(angles[i])*r1).toFixed(1)+' '+(cx+Math.cos(angles[ni])*r2).toFixed(1)+','+(cy+Math.sin(angles[ni])*r2).toFixed(1)+'" fill="'+COLORS[el]+'" opacity="0.38"/>';
+    }
+  });
+  /* 데이터 외곽선 */
+  var dpts=EL.map(function(el,i){var r=cnt[el]/maxCnt*R;return (cx+Math.cos(angles[i])*r).toFixed(1)+','+(cy+Math.sin(angles[i])*r).toFixed(1);}).join(' ');
+  svg+='<polygon points="'+dpts+'" fill="none" stroke="rgba(230,210,255,0.55)" stroke-width="1.2"/>';
+  /* 라벨 */
+  EL.forEach(function(el,i){
+    var lx=(cx+Math.cos(angles[i])*LR).toFixed(1), ly=(cy+Math.sin(angles[i])*LR).toFixed(1);
+    svg+='<text x="'+lx+'" y="'+(parseFloat(ly)-4).toFixed(1)+'" text-anchor="middle" fill="'+COLORS[el]+'" font-size="13" font-family="serif" font-weight="bold">'+HANJA[el]+'</text>';
+    svg+='<text x="'+lx+'" y="'+(parseFloat(ly)+10).toFixed(1)+'" text-anchor="middle" fill="'+COLORS[el]+'" font-size="10" font-family="sans-serif">'+cnt[el]+'</text>';
+  });
+  document.getElementById('ohengSvg').innerHTML=svg;
+
+  /* 범례 */
+  var legend=EL.map(function(el){
+    var pct=Math.round(cnt[el]/maxCnt*100);
+    return '<div class="oheng-row"><span class="oheng-dot" style="background:'+COLORS[el]+'"></span>'
+      +'<span class="oheng-nm" style="color:'+COLORS[el]+'">'+el+'</span>'
+      +'<div class="oheng-bar-bg"><div class="oheng-bar-fg" style="width:'+pct+'%;background:'+COLORS[el]+'"></div></div>'
+      +'<span class="oheng-num">'+cnt[el]+'</span></div>';
+  }).join('');
+  document.getElementById('ohengLegend').innerHTML=legend;
+
+  /* 사주팔자 4주 */
+  var pillars=[
+    {lbl:'시(時)',cg:flat['시주천간'],jj:flat['시주지지']},
+    {lbl:'일(日)',cg:flat['일주천간'],jj:flat['일주지지']},
+    {lbl:'월(月)',cg:flat['월주천간'],jj:flat['월주지지']},
+    {lbl:'년(年)',cg:flat['년주천간'],jj:flat['년주지지']},
+  ];
+  var pw=pillars.map(function(p){
+    if(!p.cg) return '<div class="pillar pillar-none"><span class="pillar-lbl">'+p.lbl+'</span><span class="pillar-cg">—</span><span class="pillar-jj">—</span><span class="pillar-kor">미상</span></div>';
+    var cgC=COLORS[p.cg.oheng]||'var(--purple-l)';
+    var jjC=COLORS[p.jj.oheng]||'var(--purple-l)';
+    return '<div class="pillar"><span class="pillar-lbl">'+p.lbl+'</span>'
+      +'<span class="pillar-cg" style="color:'+cgC+'">'+p.cg.hanja+'</span>'
+      +'<span class="pillar-jj" style="color:'+jjC+'">'+p.jj.hanja+'</span>'
+      +'<span class="pillar-kor">'+p.cg.name+p.jj.name+'</span></div>';
+  }).join('');
+  document.getElementById('pillarsWrap').innerHTML=pw;
+
+  /* 미리보기 텍스트 */
+  document.getElementById('freeText').textContent=preview;
+
+  /* 카드 표시 */
+  var card=document.getElementById('resultCard');
+  card.style.display='block';
+  setTimeout(function(){card.scrollIntoView({behavior:'smooth',block:'start'});},100);
+}
+
 async function runAnalysis(){
   const name=document.getElementById('userName').value.trim();
   const year=document.getElementById('year').value.trim();
   const month=document.getElementById('month').value.trim();
   const day=document.getElementById('day').value.trim();
-  if(!name||!year||!month||!day){alert('성함과 생년월일을 입력해주세요.');return;}
+  if(!name||!year||!month||!day){showError('입력이 부족하오','성함과 생년월일을 입력해주시오.');return;}
 
   const noTime=document.getElementById('noTime').checked;
-  const payload={
+  _sajuPayload={
     name,gender:document.getElementById('userGender').value,
     birth:year+'-'+month+'-'+day,
-    time:noTime?'모름':document.getElementById('ampm').value+' '+document.getElementById('hour').value+'시 '+document.getElementById('min').value+'분',
-    love_status:'전반적인 연애운',
-    love_question:'연애운 전반적으로 봐주세요'
+    time:(()=>{const h=document.getElementById('hour').value;const m=document.getElementById('min').value||'0';return(noTime||!h)?'모름':document.getElementById('ampm').value+' '+h+'시 '+m+'분';})(),
   };
 
   showLoading();
   try{
-    const res=await fetch('/love_preview',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    const res=await fetch('/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(_sajuPayload)});
     const data=await res.json();
     hideLoading();
-    if(data.error){alert('오류: '+data.error);return;}
-    sessionStorage.setItem('saju_result',JSON.stringify({...payload,saju:data.saju,preview:data.preview}));
+    if(data.error){showError('기운을 읽지 못했소이다',data.error);return;}
+    sessionStorage.setItem('saju_result',JSON.stringify({..._sajuPayload,saju:data.saju,preview:data.preview}));
     window.location.href='/result';
   }catch(e){
     hideLoading();
-    alert('기운을 읽는 중 오류가 발생했습니다.');
+    showError('기운을 읽지 못했소이다','잠시 후 다시 시도해주시오.');
   }
 }
 
 function requestPay(){
-  if(typeof window.IMP==='undefined'){alert('결제 모듈 로딩 중입니다.');return;}
+  if(typeof window.IMP==='undefined'){showError('잠시만 기다리시오','결제 모듈을 불러오는 중이오. 잠시 후 다시 시도하시오.');return;}
+  const payload=_sajuPayload||JSON.parse(sessionStorage.getItem('saju_payload')||'{}');
   window.IMP.request_pay({
     pg:'kakaopay.TC0ONETIME',amount:9900,
     name:'유도령 올인원 운세 패키지',
     merchant_uid:'yudoryung_'+Date.now(),
-    buyer_name:document.getElementById('userName').value
-  },function(rsp){
-    if(rsp.success){closeModal();alert('복채 확인 완료! 곧 상세 운세로 이동합니다.');}
-    else{alert('결제 실패: '+rsp.error_msg);}
+    buyer_name:payload.name||''
+  },async function(rsp){
+    if(rsp.success){
+      closeModal();
+      if(!payload.birth){showError('사주 정보가 없소이다','다시 입력해주시오.');return;}
+      showLoading();
+      try{
+        const res=await fetch('/pay_analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+        const data=await res.json();
+        hideLoading();
+        if(data.detail){
+          sessionStorage.setItem('saju_result',JSON.stringify({...payload,detail:data.detail}));
+          window.location.href='/result';
+        }else{showError('분석에 실패했소이다','잠시 후 다시 시도해주시오.');}
+      }catch(e){hideLoading();showError('운세를 풀어내지 못했소이다','잠시 후 다시 시도해주시오.');}
+    }else{showError('결제에 실패했소이다',rsp.error_msg);}
   });
 }
 </script>
+<script>
+(function(){
+  var el=document.getElementById('live-cnt');
+  function rand(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
+  var base=rand(25,97);
+  el.textContent=base;
+  setInterval(function(){
+    base=base+rand(-3,4);
+    if(base<25)base=25;if(base>97)base=97;
+    el.textContent=base;
+  },7000);
+})();
+</script>
+
+<!-- 유도령 에러 토스트 -->
+<div class="yudo-toast" id="yudoToast">
+  <img class="toast-avatar" src="/static/yudo.png" alt="유도령">
+  <div class="toast-body">
+    <p class="toast-title" id="toastTitle">알 수 없는 오류요</p>
+    <p class="toast-msg" id="toastMsg"></p>
+  </div>
+  <button class="toast-close" onclick="hideToast()">✕</button>
+</div>
 </body>
 </html>
