@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 load_dotenv()
 from google import genai
 from google.genai import types
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, redirect
 from saju_logic import calc_saju, lunar_to_solar
 
 app = Flask(__name__)
@@ -363,6 +363,15 @@ def loading_page():
 @app.route('/result')
 def result_page():
     return render_template('result.html')
+
+@app.route('/payment/return')
+def payment_return():
+    from urllib.parse import quote
+    imp_success = request.args.get('imp_success', 'false')
+    error_msg   = request.args.get('error_msg', '')
+    if imp_success == 'true':
+        return redirect('/result?payment_done=1')
+    return redirect('/result?payment_failed=1&error_msg=' + quote(error_msg))
 
 @app.route('/saju')
 def saju_page():

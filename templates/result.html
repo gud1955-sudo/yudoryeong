@@ -67,7 +67,7 @@ body{font-family:var(--font-n);background:var(--bg);color:var(--white);min-heigh
 .analysis-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(220,170,60,.4),transparent);}
 .analysis-label{font-size:10px;color:var(--gold);letter-spacing:.18em;text-transform:uppercase;padding:22px 22px 10px;}
 .analysis-yudo-row{display:flex;align-items:flex-start;gap:14px;padding:0 18px 22px;}
-.bubble-blur-wrap{position:relative;margin-top:12px;min-height:280px;}
+.bubble-blur-wrap{position:relative;margin-top:12px;min-height:200px;}
 .blur-text{font-family:var(--font-s);font-size:13px;line-height:2.1;color:rgba(200,180,255,.65);filter:blur(4.5px);user-select:none;padding:0 0 280px;pointer-events:none;}
 .bubble-lock{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;background:linear-gradient(to bottom,transparent 0%,rgba(8,4,25,.95) 32%);gap:14px;padding:0 16px 28px;}
 
@@ -155,8 +155,8 @@ body{font-family:var(--font-n);background:var(--bg);color:var(--white);min-heigh
   .yudo-avatar{width:40px;height:40px;}
   .oheng-svg{width:180px;height:180px;}
   .analysis-yudo-row{padding:0 14px 16px;}
-  .bubble-blur-wrap{min-height:220px;}
-  .blur-text{font-size:12px;padding-bottom:50px;}
+  .bubble-blur-wrap{min-height:160px;}
+  .blur-text{font-size:12px;padding-bottom:0;}
   .bubble-lock{gap:12px;padding:0 12px 28px;background:linear-gradient(to bottom,transparent 0%,rgba(8,4,25,.98) 30%);}
   .lock-title{font-size:13px;}
   .lock-items{gap:5px;}
@@ -487,29 +487,45 @@ if(data.name){
   })();
 }
 
+// 모바일 결제 복귀 처리 (redirect_url → /payment/return → /result?payment_done=1)
+(function(){
+  var params=new URLSearchParams(location.search);
+  if(params.get('payment_done')==='1'&&data.saju){
+    history.replaceState(null,'','/result');
+    setTimeout(function(){loadDetail();},400);
+  }
+  if(params.get('payment_failed')==='1'){
+    history.replaceState(null,'','/result');
+    var em=params.get('error_msg')||'';
+    setTimeout(function(){showError('결제가 이루어지지 않았소이다',em||'다시 시도해 주시오.');},400);
+  }
+})();
+
 function openModal(){document.getElementById('payModal').classList.add('open')}
 function closeModal(){document.getElementById('payModal').classList.remove('open')}
 
 function requestPay(){
-  if(typeof window.IMP==='undefined'){showError('잠시만 기다리시오','결제 모듈을 불러오는 중이오. 잠시 후 다시 시도하시오.');return;}
+  if(typeof window.IMP==='undefined'){showError('잠시만 기다리시오','결제 모듈을 불러오는 중이오. 잠시 후 다시 청해주시오.');return;}
   window.IMP.request_pay({
     pg:'kakaopay.TC0ONETIME',amount:9900,
     name:'유도령 올인원 운세 패키지',
     merchant_uid:'yudoryung_'+Date.now(),
-    buyer_name: data.name || ''
+    buyer_name: data.name || '',
+    redirect_url: location.origin + '/payment/return'
   },function(rsp){
     if(rsp.success){closeModal();loadDetail();}
     else{showError('결제에 실패했소이다',rsp.error_msg);}
   });
 }
 function requestCardPay(){
-  if(typeof window.IMP==='undefined'){showError('잠시만 기다리시오','결제 모듈을 불러오는 중이오. 잠시 후 다시 시도하시오.');return;}
+  if(typeof window.IMP==='undefined'){showError('잠시만 기다리시오','결제 모듈을 불러오는 중이오. 잠시 후 다시 청해주시오.');return;}
   window.IMP.request_pay({
     pg:'tosspayments.YOUR_TOSS_MID',amount:9900,
     name:'유도령 올인원 운세 패키지',
     merchant_uid:'yudoryung_'+Date.now(),
     buyer_name: data.name || '',
-    pay_method:'card'
+    pay_method:'card',
+    redirect_url: location.origin + '/payment/return'
   },function(rsp){
     if(rsp.success){closeModal();loadDetail();}
     else{showError('결제에 실패했소이다',rsp.error_msg);}
