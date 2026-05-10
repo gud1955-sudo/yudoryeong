@@ -311,6 +311,11 @@ SINNYEON_CACHE = {}
 LOVE_CACHE     = {}
 
 # ─── 라우트 ─────────────────────────────────────────────────────────
+@app.route('/check')
+def check_key():
+    key = os.environ.get("GEMINI_API_KEY", "없음")
+    return f"키 앞 10자: {key[:10]} / 전체 길이: {len(key)}"
+
 @app.route('/')
 def home():
     return render_template('index.html')
