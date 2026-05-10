@@ -678,7 +678,7 @@ function animateCount(el, target, suffix){
   let cur=0; const step=Math.ceil(target/60);
   const t=setInterval(()=>{cur=Math.min(cur+step,target);el.textContent=cur.toLocaleString()+suffix;if(cur>=target)clearInterval(t);},16);
 }
-setTimeout(()=>{animateCount(document.getElementById('cnt1'),12483,'');},500);
+fetch('/count').then(r=>r.json()).then(d=>{setTimeout(()=>{animateCount(document.getElementById('cnt1'),d.count,'');},500);}).catch(()=>{setTimeout(()=>{animateCount(document.getElementById('cnt1'),12483,'');},500);});
 
 
 function lim(el,max,nxt){el.value=el.value.replace(/[^0-9]/g,'');if(el.value.length>=2){if(parseInt(el.value)>max)el.value=String(max);if(nxt){const nx=document.getElementById(nxt);if(nx)nx.focus();}}}

@@ -311,6 +311,23 @@ SINNYEON_CACHE = {}
 LOVE_CACHE     = {}
 
 # ─── 라우트 ─────────────────────────────────────────────────────────
+def get_cumulative_count():
+    import datetime, hashlib
+    base = 12000
+    start = datetime.date(2026, 3, 17)
+    today = datetime.date.today()
+    days = max(0, (today - start).days)
+    total = base
+    for i in range(days):
+        day = start + datetime.timedelta(days=i)
+        seed = int(hashlib.md5(str(day).encode()).hexdigest(), 16)
+        total += 5 + (seed % 9)
+    return total
+
+@app.route('/count')
+def count():
+    return jsonify({'count': get_cumulative_count()})
+
 @app.route('/')
 def home():
     return render_template('index.html')
