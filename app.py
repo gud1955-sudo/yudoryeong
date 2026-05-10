@@ -315,6 +315,18 @@ LOVE_CACHE     = {}
 def home():
     return render_template('index.html')
 
+@app.route('/terms')
+def terms():
+    return render_template('terms.html')
+
+@app.route('/privacy')
+def privacy():
+    return render_template('privacy.html')
+
+@app.route('/refund')
+def refund():
+    return render_template('refund.html')
+
 @app.route('/loading')
 def loading_page():
     return render_template('loading.html')
