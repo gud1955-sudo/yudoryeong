@@ -346,7 +346,7 @@ function saveImage(){
 
 window.onload=function(){
   if(window.IMP) window.IMP.init("imp50011546");
-  if(window.Kakao && !window.Kakao.isInitialized()) window.Kakao.init('7f56c4adfde5e0ecce6aba5f57d1d3f2');
+  if(window.Kakao && !window.Kakao.isInitialized()) window.Kakao.init('6785e9b15870ed4b45a9fb67c67d6138');
 };
 
 function shareKakao(){
@@ -355,7 +355,7 @@ function shareKakao(){
       navigator.share({title:'유도령의 천기직언 — 나의 사주 분석', url:window.location.href});
     } else {
       const url = encodeURIComponent('https://yudoryeong-saju.com');
-      window.open('https://sharer.kakao.com/talk/friends/picker/link?app_key=7f56c4adfde5e0ecce6aba5f57d1d3f2&link_ver=4.0&template_object='+encodeURIComponent(JSON.stringify({object_type:'feed',content:{title:'유도령의 천기직언',description:'나의 사주를 풀어봤습니다. 당신의 운명도 확인해보세요.',link:{web_url:'https://yudoryeong-saju.com',mobile_web_url:'https://yudoryeong-saju.com'}}})),'kakao_share','width=500,height=600');
+      window.open('https://sharer.kakao.com/talk/friends/picker/link?app_key=6785e9b15870ed4b45a9fb67c67d6138&link_ver=4.0&template_object='+encodeURIComponent(JSON.stringify({object_type:'feed',content:{title:'유도령의 천기직언',description:'나의 사주를 풀어봤습니다. 당신의 운명도 확인해보세요.',link:{web_url:'https://yudoryeong-saju.com',mobile_web_url:'https://yudoryeong-saju.com'}}})),'kakao_share','width=500,height=600');
     }
     return;
   }
