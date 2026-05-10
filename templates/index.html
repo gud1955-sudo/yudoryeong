@@ -214,7 +214,7 @@ body{font-family:var(--font-n);background:var(--bg);color:var(--white);min-heigh
 .loading-orb{width:110px;height:110px;margin-bottom:30px;animation:float 3s ease-in-out infinite;}
 .loading-orb svg{width:100%;height:100%;overflow:visible;}
 .loading-title{font-family:var(--font-s);font-size:20px;background:linear-gradient(135deg,var(--purple-l),var(--gold-l));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:8px;}
-.loading-msg{font-family:var(--font-s);font-size:13px;color:var(--muted);height:24px;margin-bottom:28px;transition:opacity .4s;}
+.loading-msg{font-family:var(--font-s);font-size:13px;color:var(--muted);min-height:46px;text-align:center;padding:0 28px;margin-bottom:20px;transition:opacity .4s;display:flex;align-items:center;justify-content:center;}
 .loading-bar-wrap{width:220px;height:3px;background:rgba(150,100,255,.15);border-radius:3px;overflow:hidden;margin-bottom:8px;}
 .loading-bar{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--purple),var(--gold),var(--purple));background-size:200% auto;animation:shimmer 1.5s linear infinite;width:0%;transition:width .3s ease;}
 .loading-dots{display:flex;justify-content:center;gap:6px;margin-top:8px;}
@@ -704,7 +704,7 @@ function showLoading(){
     loadingMsgIdx=(loadingMsgIdx+1)%LOADING_MSGS.length;
     const el=document.getElementById('loadingMsg');
     el.style.opacity='0';
-    setTimeout(()=>{el.textContent=LOADING_MSGS[loadingMsgIdx];el.style.opacity='1';},300);
+    setTimeout(()=>{el.textContent=LOADING_MSGS[loadingMsgIdx];el.style.opacity='1';},430);
   },2000);
   // 로딩바 진행
   let pct=0;
