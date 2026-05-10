@@ -838,7 +838,7 @@ async function runAnalysis(){
     window.location.href='/result';
   }catch(e){
     hideLoading();
-    showError('기운을 읽지 못했소이다','잠시 후 다시 시도해주시오.');
+    showError('기운을 읽지 못했소이다','잠시 후 다시 청해주시오.');
   }
 }
 
@@ -853,7 +853,7 @@ function requestPay(){
   },async function(rsp){
     if(rsp.success){
       closeModal();
-      if(!payload.birth){showError('사주 정보가 없소이다','다시 입력해주시오.');return;}
+      if(!payload.birth){showError('사주 정보가 없소이다','처음부터 다시 입력해주시오.');return;}
       showLoading();
       try{
         const res=await fetch('/pay_analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
@@ -862,8 +862,8 @@ function requestPay(){
         if(data.detail){
           sessionStorage.setItem('saju_result',JSON.stringify({...payload,detail:data.detail}));
           window.location.href='/result';
-        }else{showError('분석에 실패했소이다','잠시 후 다시 시도해주시오.');}
-      }catch(e){hideLoading();showError('운세를 풀어내지 못했소이다','잠시 후 다시 시도해주시오.');}
+        }else{showError('분석에 실패했소이다','잠시 후 다시 청해주시오.');}
+      }catch(e){hideLoading();showError('운세를 풀어내지 못했소이다','잠시 후 다시 청해주시오.');}
     }else{showError('결제에 실패했소이다',rsp.error_msg);}
   });
 }

@@ -336,15 +336,15 @@ function hideToast(){var t=document.getElementById('yudoToast');if(t)t.classList
 
 function saveImage(){
   var target=document.getElementById('detailSection');
-  if(!target){showError('저장 실패','화면을 불러오지 못했소이다.');return;}
-  showError('잠시 기다리시오','결과 이미지를 만드는 중이오...');
+  if(!target){showError('화면을 가져오지 못했소이다','잠시 후 다시 청해주시오.');return;}
+  showError('잠시만 기다리시오','결과를 형상으로 빚는 중이오...');
   html2canvas(target,{backgroundColor:'#05030f',scale:2,useCORS:true,logging:false}).then(function(canvas){
     hideToast();
     var link=document.createElement('a');
     link.download='유도령_천기직언_'+(data.name||'사주')+'.png';
     link.href=canvas.toDataURL('image/png');
     link.click();
-  }).catch(function(){showError('저장 실패','이미지 저장에 실패했소이다.');});
+  }).catch(function(){showError('형상을 남기지 못했소이다','잠시 후 다시 청해주시오.');});
 }
 
 window.onload=function(){
@@ -589,12 +589,12 @@ async function loadDetail(){
       },350);
     } else {
       lo.classList.remove('show');
-      showError('천기를 읽지 못했소이다','잠시 후 다시 시도해주시오.');
+      showError('천기를 읽지 못했소이다','잠시 후 다시 청해주시오.');
     }
   }catch(e){
     stopLoadingSteps();
     lo.classList.remove('show');
-    showError('운세를 풀어내지 못했소이다','잠시 후 다시 시도해주시오.');
+    showError('운세를 풀어내지 못했소이다','잠시 후 다시 청해주시오.');
   }
 }
 </script>
