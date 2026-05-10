@@ -186,7 +186,7 @@ body{font-family:var(--font-n);background:var(--bg);color:var(--white);min-heigh
 .review-track-wrap::before{left:0;background:linear-gradient(to right,var(--bg),transparent);}
 .review-track-wrap::after{right:0;background:linear-gradient(to left,var(--bg),transparent);}
 .review-track{display:flex;gap:12px;padding:4px 18px;animation:scrollReview 62s linear infinite;will-change:transform;transform:translateZ(0);}
-.review-track:hover{animation-play-state:paused;}
+.review-track.paused{animation-play-state:paused;}
 @keyframes scrollReview{0%{transform:translate3d(0,0,0)}100%{transform:translate3d(-50%,0,0)}}
 .review-card{flex:0 0 230px;background:rgba(20,10,50,.85);border:1px solid rgba(160,100,255,.2);border-radius:14px;padding:15px 15px;position:relative;}
 .review-stars{color:var(--gold);font-size:11px;letter-spacing:2px;margin-bottom:7px;}
@@ -608,6 +608,12 @@ const REVIEWS = [
     st.textContent='@keyframes scrollReview{from{transform:translate3d(0,0,0)}to{transform:translate3d(-'+setW+'px,0,0)}}';
     document.head.appendChild(st);
   });
+  // 터치: 누르면 멈추고, 손 떼면 다시 돌아감 (desktop은 mouseenter/mouseleave)
+  track.addEventListener('mouseenter',()=>track.classList.add('paused'));
+  track.addEventListener('mouseleave',()=>track.classList.remove('paused'));
+  track.addEventListener('touchstart',()=>track.classList.add('paused'),{passive:true});
+  track.addEventListener('touchend',()=>track.classList.remove('paused'),{passive:true});
+  track.addEventListener('touchcancel',()=>track.classList.remove('paused'),{passive:true});
 })();
 // ─── 커스텀 드롭다운 ───
 function cdropClose(d){
