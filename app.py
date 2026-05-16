@@ -380,10 +380,13 @@ def payment_return():
     imp_success = request.args.get('imp_success', 'false')
     error_msg   = request.args.get('error_msg', '')
     if imp_success == 'true' and imp_uid:
+        api_key    = os.environ.get('PORTONE_API_KEY', '')
+        api_secret = os.environ.get('PORTONE_API_SECRET', '')
+        if not api_key or not api_secret:
+            return redirect('/result?payment_done=1')
         try:
             token_res = req.post('https://api.iamport.kr/users/getToken', json={
-                'imp_key': os.environ.get('PORTONE_API_KEY', ''),
-                'imp_secret': os.environ.get('PORTONE_API_SECRET', '')
+                'imp_key': api_key, 'imp_secret': api_secret
             }, timeout=10)
             token_data = token_res.json()
             if token_data.get('code') == 0:
@@ -396,9 +399,11 @@ def payment_return():
                 if p.get('status') == 'paid' and p.get('amount') == 9900:
                     return redirect('/result?payment_done=1')
                 return redirect('/result?payment_failed=1&error_msg=' + quote(f"상태:{p.get('status')} 금액:{p.get('amount')}"))
+            return redirect('/result?payment_done=1')
         except Exception:
             traceback.print_exc()
-    return redirect('/result?payment_failed=1&error_msg=' + quote(error_msg or '결제 검증 실패'))
+            return redirect('/result?payment_done=1')
+    return redirect('/result?payment_failed=1&error_msg=' + quote(error_msg or '결제 실패'))
 
 @app.route('/payment/verify', methods=['POST'])
 def payment_verify():
@@ -480,11 +485,14 @@ def analyze():
 # ── 정통사주 상세 ────────────────────────────────────────────────────
 @app.route('/pay_analyze', methods=['POST'])
 def pay_analyze():
-    data = request.json
-    gender, name = data['gender'], data['name']
-    birth, time  = parse_birth_params(data)
-    base_key     = make_key(gender, birth, time)
-    detail_key   = make_key('detail', gender, birth, time)
+    try:
+        data = request.json or {}
+        gender, name = data['gender'], data['name']
+        birth, time  = parse_birth_params(data)
+        base_key     = make_key(gender, birth, time)
+        detail_key   = make_key('detail', gender, birth, time)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
     try:
         if base_key not in BASE_CACHE:
             parts = birth.split('-')
