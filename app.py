@@ -414,7 +414,8 @@ def payment_verify():
         }, timeout=10)
         token_data = token_res.json()
         if token_data.get('code') != 0:
-            return jsonify({'verified': False, 'message': '포트원 인증 실패'}), 500
+            return jsonify({'verified': False, 'message': f"포트원 인증 실패: {token_data.get('message', '')}"})
+
         access_token = token_data['response']['access_token']
         pay_res = req.get(
             f'https://api.iamport.kr/payments/{imp_uid}',
@@ -423,10 +424,10 @@ def payment_verify():
         p = pay_res.json().get('response', {})
         if p.get('status') == 'paid' and p.get('amount') == 9900:
             return jsonify({'verified': True})
-        return jsonify({'verified': False, 'message': f"상태: {p.get('status')}, 금액: {p.get('amount')}"}), 400
+        return jsonify({'verified': False, 'message': f"상태: {p.get('status')}, 금액: {p.get('amount')}"})
     except Exception as e:
         traceback.print_exc()
-        return jsonify({'verified': False, 'message': str(e)}), 500
+        return jsonify({'verified': False, 'message': str(e)})
 
 @app.route('/saju')
 def saju_page():
