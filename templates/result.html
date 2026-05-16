@@ -521,7 +521,7 @@ function requestPay(){
 function requestCardPay(){
   if(typeof window.IMP==='undefined'){showError('잠시만 기다리시오','결제 모듈을 불러오는 중이오. 잠시 후 다시 청해주시오.');return;}
   window.IMP.request_pay({
-    pg:'html5_inicis',
+    pg:'html5_inicis.INIpayTest',
     pay_method:'card',
     amount:9900,
     name:'유도령 올인원 운세 패키지',
