@@ -507,7 +507,7 @@ function closeModal(){document.getElementById('payModal').classList.remove('open
 function requestPay(){
   if(typeof window.IMP==='undefined'){showError('잠시만 기다리시오','결제 모듈을 불러오는 중이오. 잠시 후 다시 청해주시오.');return;}
   window.IMP.request_pay({
-    pg:'kakaopay.TC0ONETIME',
+    channel_key:'channel-key-05075d03-25ac-4585-8350-c081d9346535',
     amount:9900,
     name:'유도령 올인원 운세 패키지',
     merchant_uid:'yudoryung_'+Date.now(),
@@ -521,7 +521,7 @@ function requestPay(){
 function requestCardPay(){
   if(typeof window.IMP==='undefined'){showError('잠시만 기다리시오','결제 모듈을 불러오는 중이오. 잠시 후 다시 청해주시오.');return;}
   window.IMP.request_pay({
-    pg:'html5_inicis.INIpayTest',
+    channel_key:'channel-key-fa6c6576-309e-49dc-b058-3d713588c765',
     pay_method:'card',
     amount:9900,
     name:'유도령 올인원 운세 패키지',
