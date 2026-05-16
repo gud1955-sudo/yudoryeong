@@ -392,10 +392,10 @@ def payment_return():
                     f'https://api.iamport.kr/payments/{imp_uid}',
                     headers={'Authorization': access_token}, timeout=10
                 )
-                p = pay_res.json().get('response', {})
+                p = pay_res.json().get('response') or {}
                 if p.get('status') == 'paid' and p.get('amount') == 9900:
                     return redirect('/result?payment_done=1')
-                return redirect('/result?payment_failed=1&error_msg=' + quote('결제 금액 불일치'))
+                return redirect('/result?payment_failed=1&error_msg=' + quote(f"상태:{p.get('status')} 금액:{p.get('amount')}"))
         except Exception:
             traceback.print_exc()
     return redirect('/result?payment_failed=1&error_msg=' + quote(error_msg or '결제 검증 실패'))
@@ -421,7 +421,7 @@ def payment_verify():
             f'https://api.iamport.kr/payments/{imp_uid}',
             headers={'Authorization': access_token}, timeout=10
         )
-        p = pay_res.json().get('response', {})
+        p = pay_res.json().get('response') or {}
         if p.get('status') == 'paid' and p.get('amount') == 9900:
             return jsonify({'verified': True})
         return jsonify({'verified': False, 'message': f"상태: {p.get('status')}, 금액: {p.get('amount')}"})
