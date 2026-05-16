@@ -341,7 +341,7 @@ def get_cumulative_count():
     for i in range(days):
         day = start + datetime.timedelta(days=i)
         seed = int(hashlib.md5(str(day).encode()).hexdigest(), 16)
-        total += 5 + (seed % 9)
+        total += 5 + (seed % 46)
     return total
 
 @app.route('/count')
