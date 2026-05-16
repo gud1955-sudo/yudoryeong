@@ -29,15 +29,23 @@ def clean_output(text):
     return text
 
 def call_gemini(prompt, temperature=0.6):
-    response = client.models.generate_content(
-        model="gemini-2.5-flash",
-        contents=prompt,
-        config=types.GenerateContentConfig(
-            system_instruction=SYSTEM_MSG,
-            temperature=temperature,
-        )
-    )
-    return clean_output(response.text)
+    import time
+    for attempt in range(2):
+        try:
+            response = client.models.generate_content(
+                model="gemini-2.5-flash",
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    system_instruction=SYSTEM_MSG,
+                    temperature=temperature,
+                )
+            )
+            return clean_output(response.text)
+        except Exception:
+            if attempt == 0:
+                time.sleep(2)
+            else:
+                raise
 
 def attach_nim(text, names):
     for name in names:
@@ -366,12 +374,59 @@ def result_page():
 
 @app.route('/payment/return')
 def payment_return():
+    import requests as req
     from urllib.parse import quote
+    imp_uid     = request.args.get('imp_uid', '')
     imp_success = request.args.get('imp_success', 'false')
     error_msg   = request.args.get('error_msg', '')
-    if imp_success == 'true':
-        return redirect('/result?payment_done=1')
-    return redirect('/result?payment_failed=1&error_msg=' + quote(error_msg))
+    if imp_success == 'true' and imp_uid:
+        try:
+            token_res = req.post('https://api.iamport.kr/users/getToken', json={
+                'imp_key': os.environ.get('PORTONE_API_KEY', ''),
+                'imp_secret': os.environ.get('PORTONE_API_SECRET', '')
+            }, timeout=10)
+            token_data = token_res.json()
+            if token_data.get('code') == 0:
+                access_token = token_data['response']['access_token']
+                pay_res = req.get(
+                    f'https://api.iamport.kr/payments/{imp_uid}',
+                    headers={'Authorization': access_token}, timeout=10
+                )
+                p = pay_res.json().get('response', {})
+                if p.get('status') == 'paid' and p.get('amount') == 9900:
+                    return redirect('/result?payment_done=1')
+                return redirect('/result?payment_failed=1&error_msg=' + quote('결제 금액 불일치'))
+        except Exception:
+            traceback.print_exc()
+    return redirect('/result?payment_failed=1&error_msg=' + quote(error_msg or '결제 검증 실패'))
+
+@app.route('/payment/verify', methods=['POST'])
+def payment_verify():
+    import requests as req
+    data    = request.json
+    imp_uid = data.get('imp_uid', '')
+    if not imp_uid:
+        return jsonify({'verified': False, 'message': '결제 정보가 없습니다'}), 400
+    try:
+        token_res = req.post('https://api.iamport.kr/users/getToken', json={
+            'imp_key': os.environ.get('PORTONE_API_KEY', ''),
+            'imp_secret': os.environ.get('PORTONE_API_SECRET', '')
+        }, timeout=10)
+        token_data = token_res.json()
+        if token_data.get('code') != 0:
+            return jsonify({'verified': False, 'message': '포트원 인증 실패'}), 500
+        access_token = token_data['response']['access_token']
+        pay_res = req.get(
+            f'https://api.iamport.kr/payments/{imp_uid}',
+            headers={'Authorization': access_token}, timeout=10
+        )
+        p = pay_res.json().get('response', {})
+        if p.get('status') == 'paid' and p.get('amount') == 9900:
+            return jsonify({'verified': True})
+        return jsonify({'verified': False, 'message': f"상태: {p.get('status')}, 금액: {p.get('amount')}"}), 400
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({'verified': False, 'message': str(e)}), 500
 
 @app.route('/saju')
 def saju_page():

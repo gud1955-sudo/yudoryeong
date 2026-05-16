@@ -507,29 +507,44 @@ function closeModal(){document.getElementById('payModal').classList.remove('open
 function requestPay(){
   if(typeof window.IMP==='undefined'){showError('잠시만 기다리시오','결제 모듈을 불러오는 중이오. 잠시 후 다시 청해주시오.');return;}
   window.IMP.request_pay({
-    pg:'kakaopay.TC0ONETIME',amount:9900,
+    pg:'kakaopay',
+    amount:9900,
     name:'유도령 올인원 운세 패키지',
     merchant_uid:'yudoryung_'+Date.now(),
     buyer_name: data.name || '',
     redirect_url: location.origin + '/payment/return'
   },function(rsp){
-    if(rsp.success){closeModal();loadDetail();}
+    if(rsp.success){closeModal();verifyAndLoad(rsp.imp_uid,rsp.merchant_uid);}
     else{showError('결제에 실패했소이다',rsp.error_msg);}
   });
 }
 function requestCardPay(){
   if(typeof window.IMP==='undefined'){showError('잠시만 기다리시오','결제 모듈을 불러오는 중이오. 잠시 후 다시 청해주시오.');return;}
   window.IMP.request_pay({
-    pg:'tosspayments.YOUR_TOSS_MID',amount:9900,
+    pg:'html5_inicis',
+    pay_method:'card',
+    amount:9900,
     name:'유도령 올인원 운세 패키지',
     merchant_uid:'yudoryung_'+Date.now(),
     buyer_name: data.name || '',
-    pay_method:'card',
     redirect_url: location.origin + '/payment/return'
   },function(rsp){
-    if(rsp.success){closeModal();loadDetail();}
+    if(rsp.success){closeModal();verifyAndLoad(rsp.imp_uid,rsp.merchant_uid);}
     else{showError('결제에 실패했소이다',rsp.error_msg);}
   });
+}
+async function verifyAndLoad(imp_uid, merchant_uid){
+  try{
+    const res = await fetch('/payment/verify',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({imp_uid:imp_uid,merchant_uid:merchant_uid})
+    });
+    const d = await res.json();
+    if(d.verified){loadDetail();}
+    else{showError('결제 검증에 실패했소이다',d.message||'다시 시도해 주시오.');}
+  }catch(e){
+    showError('결제 확인 중 오류가 발생했소이다','잠시 후 다시 청해주시오.');
+  }
 }
 
 var _msgLoop = null, _msgRunning = false;
