@@ -25,12 +25,14 @@ SYSTEM_MSG = (
 
 def clean_output(text):
     import re
+    if not text:
+        return ''
     text = re.sub(r'^#+\s*', '', text, flags=re.MULTILINE)
     return text
 
 def call_gemini(prompt, temperature=0.6):
     import time
-    for attempt in range(2):
+    for attempt in range(3):
         try:
             response = client.models.generate_content(
                 model="gemini-2.5-flash",
@@ -38,11 +40,17 @@ def call_gemini(prompt, temperature=0.6):
                 config=types.GenerateContentConfig(
                     system_instruction=SYSTEM_MSG,
                     temperature=temperature,
+                    thinking_config=types.ThinkingConfig(thinking_budget=0),
                 )
             )
-            return clean_output(response.text)
+            if not response.candidates:
+                raise ValueError("Gemini 응답이 비어있습니다")
+            text = response.text
+            if not text:
+                raise ValueError("Gemini 응답 텍스트가 없습니다")
+            return clean_output(text)
         except Exception:
-            if attempt == 0:
+            if attempt < 2:
                 time.sleep(2)
             else:
                 raise
