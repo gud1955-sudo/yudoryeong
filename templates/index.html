@@ -851,11 +851,16 @@ async function runAnalysis(){
 function requestPay(pgType){
   if(typeof window.IMP==='undefined'){showError('잠시만 기다리시오','결제 모듈을 불러오는 중이오. 잠시 후 다시 시도하시오.');return;}
   const payload=_sajuPayload||JSON.parse(sessionStorage.getItem('saju_payload')||'{}');
+  const isKakao=(pgType||'').startsWith('kakaopay');
   window.IMP.request_pay({
-    pg:pgType||'kakaopay.TC0ONETIME',pay_method:'card',amount:9900,
+    pg:pgType||'kakaopay.TC0ONETIME',
+    pay_method:isKakao?'kakaopay':'card',
+    amount:9900,
     name:'유도령 올인원 운세 패키지',
     merchant_uid:'yudoryung_'+Date.now(),
-    buyer_name:payload.name||''
+    buyer_name:payload.name||'고객',
+    buyer_tel:'010-0000-0000',
+    buyer_email:''
   },async function(rsp){
     if(rsp.success){
       closeModal();
