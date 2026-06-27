@@ -850,7 +850,7 @@ async function runAnalysis(){
 
 function requestPay(pgType){
   if(typeof window.IMP==='undefined'){showError('잠시만 기다리시오','결제 모듈을 불러오는 중이오. 잠시 후 다시 시도하시오.');return;}
-  const payload=_sajuPayload||JSON.parse(sessionStorage.getItem('saju_payload')||'{}');
+  const payload=_sajuPayload||JSON.parse(sessionStorage.getItem('saju_result')||'{}');
   const isKakao=(pgType||'').startsWith('kakaopay');
   window.IMP.request_pay({
     pg:pgType||'kakaopay.TC0ONETIME',
