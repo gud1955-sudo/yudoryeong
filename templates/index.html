@@ -511,7 +511,7 @@ body{font-family:var(--font-n);background:var(--bg);color:var(--white);min-heigh
       <svg width="18" height="18" viewBox="0 0 24 24" fill="#1a1200"><path d="M12 3C6.48 3 2 6.48 2 11c0 2.83 1.56 5.32 3.94 6.87L5 21l3.57-1.75C9.61 19.72 10.78 20 12 20c5.52 0 10-3.48 10-9S17.52 3 12 3z"/></svg>
       카카오페이로 결제하기
     </button>
-    <button class="card-btn" onclick="requestPay('html5_inicis')">
+    <button class="card-btn" onclick="requestPay('channel-key-fa6c6576-309e-49dc-b058-3d713588c765')">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><path d="M20 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/></svg>
       신용카드로 결제하기
     </button>
@@ -852,8 +852,8 @@ function requestPay(pgType){
   if(typeof window.IMP==='undefined'){showError('잠시만 기다리시오','결제 모듈을 불러오는 중이오. 잠시 후 다시 시도하시오.');return;}
   const payload=_sajuPayload||JSON.parse(sessionStorage.getItem('saju_result')||'{}');
   const isKakao=(pgType||'').startsWith('kakaopay');
-  window.IMP.request_pay({
-    pg:pgType||'kakaopay.TC0ONETIME',
+  const isChannelKey=(pgType||'').startsWith('channel-key-');
+  const params={
     pay_method:isKakao?'kakaopay':'card',
     amount:9900,
     name:'유도령 올인원 운세 패키지',
@@ -861,7 +861,10 @@ function requestPay(pgType){
     buyer_name:payload.name||'고객',
     buyer_tel:'010-0000-0000',
     buyer_email:''
-  },async function(rsp){
+  };
+  if(isChannelKey){params.channelKey=pgType;}
+  else{params.pg=pgType||'kakaopay.TC0ONETIME';}
+  window.IMP.request_pay(params,async function(rsp){
     if(rsp.success){
       closeModal();
       if(!payload.birth){showError('사주 정보가 없소이다','처음부터 다시 입력해주시오.');return;}
