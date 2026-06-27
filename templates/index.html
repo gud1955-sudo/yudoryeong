@@ -236,6 +236,8 @@ body{font-family:var(--font-n);background:var(--bg);color:var(--white);min-heigh
 .modal-price span{font-size:13px;color:var(--muted)}
 .kakao-btn{width:100%;background:#fee500;border:none;border-radius:11px;padding:13px;font-size:15px;font-weight:700;color:#1a1200;cursor:pointer;margin-bottom:10px;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px;}
 .kakao-btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(254,229,0,.35)}
+.card-btn{width:100%;background:#1c3f7c;border:none;border-radius:11px;padding:13px;font-size:15px;font-weight:700;color:#fff;cursor:pointer;margin-bottom:10px;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px;}
+.card-btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(28,63,124,.45)}
 .modal-close{font-size:12px;color:var(--muted);background:none;border:none;cursor:pointer;margin-top:4px;}
 .modal-close:hover{color:var(--white)}
 
@@ -505,9 +507,13 @@ body{font-family:var(--font-n);background:var(--bg);color:var(--white);min-heigh
       <div class="modal-item">2026년 월별 운세 — 1월~12월 상세</div>
     </div>
     <div class="modal-price">9,900원 <span>/ 전체 패키지</span></div>
-    <button class="kakao-btn" onclick="requestPay()">
+    <button class="kakao-btn" onclick="requestPay('kakaopay.TC0ONETIME')">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="#1a1200"><path d="M12 3C6.48 3 2 6.48 2 11c0 2.83 1.56 5.32 3.94 6.87L5 21l3.57-1.75C9.61 19.72 10.78 20 12 20c5.52 0 10-3.48 10-9S17.52 3 12 3z"/></svg>
       카카오페이로 결제하기
+    </button>
+    <button class="card-btn" onclick="requestPay('html5_inicis')">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><path d="M20 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/></svg>
+      신용카드로 결제하기
     </button>
     <button class="modal-close" onclick="closeModal()">닫기</button>
   </div>
@@ -842,11 +848,11 @@ async function runAnalysis(){
   }
 }
 
-function requestPay(){
+function requestPay(pgType){
   if(typeof window.IMP==='undefined'){showError('잠시만 기다리시오','결제 모듈을 불러오는 중이오. 잠시 후 다시 시도하시오.');return;}
   const payload=_sajuPayload||JSON.parse(sessionStorage.getItem('saju_payload')||'{}');
   window.IMP.request_pay({
-    pg:'kakaopay.TC0ONETIME',amount:9900,
+    pg:pgType||'kakaopay.TC0ONETIME',amount:9900,
     name:'유도령 올인원 운세 패키지',
     merchant_uid:'yudoryung_'+Date.now(),
     buyer_name:payload.name||''
